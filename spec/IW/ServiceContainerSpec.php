@@ -80,8 +80,12 @@ class ServiceContainerSpec extends ObjectBehavior
 
     function it_fail_when_factory_result_is_empty() {
         $this->bind('nothing', function () {});
-
         $this->shouldThrow(EmptyResultFromFactoryException::class)->duringGet('nothing');
+    }
+
+    function it_provides_aliased_service() {
+        $this->alias(Logger::class, FileLogger::class);
+        $this->get(Service::class)->shouldBeAnInstanceOf(Service::class);
     }
 
 }
@@ -94,4 +98,12 @@ class Bar {
 
 class Baz {
     function __construct(Bar $bar, Foo $foo) {}
+}
+
+interface Logger {}
+
+class FileLogger implements Logger {}
+
+class Service {
+    public function __construct(Logger $logger) {}
 }

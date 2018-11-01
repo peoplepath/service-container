@@ -89,6 +89,11 @@ class ServiceContainer implements ContainerInterface
         return true;
     }
 
+    public function alias(string $alias, string $id): void
+    {
+        $this->factories[$alias] = self::buildAliasFactory($id);
+    }
+
     public function bind(string $id, callable $factory): void
     {
         $this->factories[$id] = $factory;
@@ -140,6 +145,12 @@ class ServiceContainer implements ContainerInterface
     {
         return static function () use ($classname) {
             return new $classname;
+        };
+    }
+
+    private static function buildAliasFactory($id) {
+        return static function ($container) use ($id) {
+            return $container->get($id);
         };
     }
 
