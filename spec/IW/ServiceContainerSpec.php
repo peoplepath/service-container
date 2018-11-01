@@ -24,13 +24,13 @@ class ServiceContainerSpec extends ObjectBehavior
 
     function it_returns_any_initializable_with_disabled_autowire()
     {
-        $this->beConstructedWith(false);
+        $this->beConstructedWith(['autowire' => false]);
         $this->get('DateTime')->shouldBeAnInstanceOf('DateTime');
     }
 
     function it_knows_any_initializable_with_disabled_autowire()
     {
-        $this->beConstructedWith(false);
+        $this->beConstructedWith(['autowire' => false]);
         $this->has('DateTimeImmutable')->shouldReturn(true);
     }
 
@@ -49,22 +49,29 @@ class ServiceContainerSpec extends ObjectBehavior
         $this->get(Baz::class)->shouldBeAnInstanceOf(Baz::class);
     }
 
-    function it_creates_singletons_by_default()
+    function it_creates_singletons_by_default_if_set()
     {
+        $this->beConstructedWith(['singletons' => true]);
         $bar = $this->getWrappedObject()->get(Bar::class);
         $this->get(Bar::class)->shouldBe($bar);
     }
 
-    function it_generates_fresh_instances_when_singleton_is_disabled()
+    function it_creates_singletons_when_marked_as_singleton()
     {
-        $this->setSingleton(Bar::class, false);
+        $this->getWrappedObject()->singleton(Bar::class);
+        $bar = $this->getWrappedObject()->get(Bar::class);
+        $this->get(Bar::class)->shouldBe($bar);
+    }
+
+    function it_generates_fresh_instances_by_default()
+    {
         $bar = $this->getWrappedObject()->get(Bar::class);
         $this->get(Bar::class)->shouldNotBe($bar);
     }
 
     function it_accept_non_class_id_if_factory_is_defined()
     {
-        $this->setFactory('logger', function () {
+        $this->bind('logger', function () {
             return new Foo;
         });
 
@@ -72,7 +79,7 @@ class ServiceContainerSpec extends ObjectBehavior
     }
 
     function it_fail_when_factory_result_is_empty() {
-        $this->setFactory('nothing', function () {});
+        $this->bind('nothing', function () {});
 
         $this->shouldThrow(EmptyResultFromFactoryException::class)->duringGet('nothing');
     }
@@ -88,4 +95,3 @@ class Bar {
 class Baz {
     function __construct(Bar $bar, Foo $foo) {}
 }
-

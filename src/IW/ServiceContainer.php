@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace IW;
 
@@ -11,7 +11,10 @@ use IW\ServiceContainer\UnsupportedAutowireParamException;
 class ServiceContainer implements ContainerInterface
 {
     /** @var bool */
-    protected $autowire = true;
+    protected $autowireEnabled = true;
+
+    /** @var bool */
+    protected $defaultSingletons = true;
 
     /** @var callable[] */
     private $factories = [];
@@ -19,8 +22,9 @@ class ServiceContainer implements ContainerInterface
     /** @var mixed[] */
     private $instances = [];
 
-    public function __construct(bool $autowire = true) {
-        $this->autowire = $autowire;
+    public function __construct(array $options=[]) {
+        $this->autowireEnabled   = (bool) ($options['autowire'] ?? true);    // autowire by default
+        $this->defaultSingletons = (bool) ($options['singletons'] ?? false); // don't create singletons by default
     }
 
     /**
@@ -35,31 +39,29 @@ class ServiceContainer implements ContainerInterface
      */
     public function get($id) {
         if (isset($this->instances[$id])) {
-            return $this->instances[$id];
+            return $this->instances[$id]; // try load a singleton if saved
         }
 
         if (!isset($this->factories[$id])) {
             try {
-                return $this->instances[$id] = new $id; // first try create instance naively
-            } catch (\Throwable $t) {
-                // cannot create instance naively for some reason, keep going and try create factory then
+                $instance = ($this->factories[$id] = static::buildSimpleFactory($id))(); // first try create instance naively
+            } catch (\Throwable $t) { // cannot create instance naively for some reason, keep going and try create factory then
+                if (!$this->autowireEnabled) {
+                    throw new ServiceNotFoundException($id);
+                }
+
+                $this->factories[$id] = self::buildFactory($id);
             }
 
-            if (!$this->autowire) {
-                throw new ServiceNotFoundException($id);
-            }
-
-            $this->factories[$id] = self::buildFactory($id);
         }
 
-        $instance = $this->factories[$id]($this, $id);
+        $instance = $instance ?? $this->factories[$id]($this, $id);
 
         if (null === $instance) {
             throw new EmptyResultFromFactoryException($id);
         }
 
-        // save singleton if not marked
-        if (!array_key_exists($id, $this->instances)) {
+        if ($this->defaultSingletons) {
             $this->instances[$id] = $instance;
         }
 
@@ -87,20 +89,14 @@ class ServiceContainer implements ContainerInterface
         return true;
     }
 
-    public function setFactory(string $id, callable $factory): void
+    public function bind(string $id, callable $factory): void
     {
         $this->factories[$id] = $factory;
     }
 
-    public function setSingleton(string $id, bool $singleton): void
+    public function singleton(string $id): void
     {
-        if ($singleton) {
-            if (array_key_exists($id, $this->instances) && $this->instances[$id] === null) {
-                unset($this->instances[$id]);
-            }
-        } else {
-            $this->instances[$id] = null; // mark that singleton cannot be created
-        }
+        $this->instances[$id] = $this->get($id);
     }
 
     private static function buildFactory($classname)
@@ -137,6 +133,13 @@ class ServiceContainer implements ContainerInterface
             $constructor->invokeArgs($instance, $args);
 
             return $instance;
+        };
+    }
+
+    private static function buildSimpleFactory($classname)
+    {
+        return static function () use ($classname) {
+            return new $classname;
         };
     }
 
