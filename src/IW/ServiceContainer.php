@@ -22,6 +22,19 @@ class ServiceContainer implements ContainerInterface
     /** @var mixed[] */
     private $instances = [];
 
+    /**
+     * Options:
+     * - autowire   TRUE will enable autowiring (container will try to resolve
+     *              dependencies in constructor automatically), FALSE will not
+     *              resolve any dependencies but container still be able resolve
+     *              instances of classes without dependencies
+     * - singletons when TRUEcontainer will save resolved instances by default,
+     *              container will resolve any subsequent dependencies with the
+     *              same instance (singleton), FALSE will not save instances
+     *              therefore container returns always fresh instance
+     *
+     * @param array $options options [autowire => bool, singletons => bool]
+     */
     public function __construct(array $options=[]) {
         $this->autowireEnabled   = (bool) ($options['autowire'] ?? true);    // autowire by default
         $this->defaultSingletons = (bool) ($options['singletons'] ?? false); // don't create singletons by default
@@ -44,10 +57,12 @@ class ServiceContainer implements ContainerInterface
 
         if (!isset($this->factories[$id])) {
             try {
-                $instance = ($this->factories[$id] = static::buildSimpleFactory($id))(); // first try create instance naively
-            } catch (\Throwable $t) { // cannot create instance naively for some reason, keep going and try create factory then
+                // first try create instance naively
+                $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
+            } catch (\Throwable $t) {
+                // cannot create instance naively for some reason, keep going and try create factory then
                 if (!$this->autowireEnabled) {
-                    throw new ServiceNotFoundException($id);
+                    throw new ServiceNotFoundException($id, $t);
                 }
 
                 $this->factories[$id] = self::buildFactory($id);
@@ -89,16 +104,59 @@ class ServiceContainer implements ContainerInterface
         return true;
     }
 
+    /**
+     * Sets an alias for a dependency, it's useful for binding implementations
+     * to a interface. Container will resolve alias as late as possible.
+     *
+     * Example:
+     * <code>
+     * interface Logger {}
+     * class FileLogger implements Logger {}
+     * class Service { function __construct(Logger $logger) {} }
+     *
+     * $container->alias(Logger::class, FileLogger::class);
+     * $service = $container->get(Service::class);
+     * </code>
+     *
+     * @param string $alias an ID for aliased dependency
+     * @param string $id    an ID of instance which will be alias resolve with
+     *
+     * @return void
+     */
     public function alias(string $alias, string $id): void
     {
         $this->factories[$alias] = self::buildAliasFactory($id);
     }
 
+    /**
+     * Bind a factory to an instance, it's useful for resolving complex dependencies
+     * where manually (eg. database connection)
+     *
+     *
+     *
+     * @param string   $id      ID of entry we want to define factory for
+     * @param callable $factory a callable which returns new instance if called
+     *                          callable will receive two arguments:
+     *                          $container - this container
+     *                          $id - ID that was called to create
+     *
+     * @return void
+     */
     public function bind(string $id, callable $factory): void
     {
         $this->factories[$id] = $factory;
     }
 
+    /**
+     * Mark particular ID to be a singleton, this is useful when global singletons
+     * are disabled but you still few.
+     *
+     * Note in good design you should not need much singletons
+     *
+     * @param string $id ID of singleton
+     *
+     * @return void
+     */
     public function singleton(string $id): void
     {
         $this->instances[$id] = $this->get($id);
