@@ -1,9 +1,13 @@
 {
+    "name": "intraworlds/service-container",
+    "description": "Lightweight yet powerful implementation of dependancy injection container with autowiring",
+    "license": "MIT",
     "require": {
         "psr/container": "^1.0"
     },
     "require-dev": {
-        "phpspec/phpspec": "^5.1"
+        "phpspec/phpspec": "^5.1",
+        "phpbench/phpbench": "@dev"
     },
     "autoload": {
         "psr-4": {
