@@ -88,6 +88,23 @@ class ServiceContainerSpec extends ObjectBehavior
         $this->get(Service::class)->shouldBeAnInstanceOf(Service::class);
     }
 
+    function it_can_be_injected_with_given_instance() {
+        $now = new \DateTime;
+        $this->set('now', $now);
+        $this->get('now')->shouldBe($now);
+    }
+
+    function it_can_be_injected_with_given_anything() {
+        $this->set('fb', ['foo' => 'bar']);
+        $this->get('fb')->shouldBe(['foo' => 'bar']);
+    }
+
+    function it_can_forget_injected_singleton() {
+        $this->set('fb', ['foo' => 'bar']);
+        $this->unset('fb');
+        $this->has('fb')->shouldReturn(false);
+    }
+
 }
 
 class Foo {}

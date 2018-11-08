@@ -148,18 +148,47 @@ class ServiceContainer implements ContainerInterface
     }
 
     /**
+     * Sets given entry as a singleton
+     *
+     * @param string $id    ID of entry
+     * @param mixed  $entry actual entry
+     *
+     * @return void
+     */
+    public function set(string $id, $entry): void
+    {
+        $this->instances[$id] = $entry;
+    }
+
+    /**
      * Mark particular ID to be a singleton, this is useful when global singletons
      * are disabled but you still few.
      *
      * Note in good design you should not need much singletons
      *
-     * @param string $id ID of singleton
+     * @param string $id ID of singleton to set
      *
      * @return void
      */
     public function singleton(string $id): void
     {
         $this->instances[$id] = $this->get($id);
+    }
+
+    /**
+     * Unset a singleton with given ID, returns TRUE if singleton was set, FALSE otherwise
+     *
+     * @param string $id ID of singleton to unset
+     *
+     * @return bool
+     */
+    public function unset(string $id): bool {
+        if (array_key_exists($id, $this->instances)) {
+            unset($this->instances[$id]);
+            return true;
+        }
+
+        return false;
     }
 
     private static function buildFactory($classname)
