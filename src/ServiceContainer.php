@@ -55,26 +55,7 @@ class ServiceContainer implements ContainerInterface
             return $this->instances[$id]; // try load a singleton if saved
         }
 
-        if (!isset($this->factories[$id])) {
-            try {
-                // first try create instance naively
-                $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
-            } catch (\Throwable $t) {
-                // cannot create instance naively for some reason, keep going and try create factory then
-                if (!$this->autowireEnabled) {
-                    throw new ServiceNotFoundException($id, $t);
-                }
-
-                $this->factories[$id] = self::buildFactory($id);
-            }
-
-        }
-
-        $instance = $instance ?? $this->factories[$id]($this, $id);
-
-        if (null === $instance) {
-            throw new EmptyResultFromFactoryException($id);
-        }
+        $instance = $this->make($id);
 
         if ($this->defaultSingletons) {
             $this->instances[$id] = $instance;
@@ -145,6 +126,39 @@ class ServiceContainer implements ContainerInterface
     public function bind(string $id, callable $factory): void
     {
         $this->factories[$id] = $factory;
+    }
+
+    /**
+     * Makes a new instance of a service. Dependencies are resolved from the container.
+     *
+     * @param string $id ID of entry we want to create new instance of
+     *
+     * @return mixed
+     */
+    public function make(string $id)
+    {
+        if (!isset($this->factories[$id])) {
+            try {
+                // first try create instance naively
+                $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
+            } catch (\Throwable $t) {
+                // cannot create instance naively for some reason, keep going and try create factory then
+                if (!$this->autowireEnabled) {
+                    throw new ServiceNotFoundException($id, $t);
+                }
+
+                $this->factories[$id] = self::buildFactory($id);
+            }
+
+        }
+
+        $instance = $instance ?? $this->factories[$id]($this, $id);
+
+        if (null === $instance) {
+            throw new EmptyResultFromFactoryException($id);
+        }
+
+        return $instance;
     }
 
     /**

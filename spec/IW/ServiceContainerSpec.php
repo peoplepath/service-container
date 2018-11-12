@@ -105,6 +105,12 @@ class ServiceContainerSpec extends ObjectBehavior
         $this->has('fb')->shouldReturn(false);
     }
 
+    function it_will_always_make_a_new_instance() {
+        $this->beConstructedWith(['singletons' => true]);
+        $bar = $this->getWrappedObject()->make(Bar::class);
+        $this->make(Bar::class)->shouldNotBe($bar);
+    }
+
 }
 
 class Foo {}
