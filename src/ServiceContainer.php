@@ -142,6 +142,8 @@ class ServiceContainer implements ContainerInterface
                 // first try create instance naively
                 $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
             } catch (\Throwable $t) {
+                unset($this->factories[$id]);
+                
                 // cannot create instance naively for some reason, keep going and try create factory then
                 if (!$this->autowireEnabled) {
                     throw new ServiceNotFoundException($id, $t);
