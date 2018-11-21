@@ -88,6 +88,8 @@ Our main code will stay the same.
 $client = $container->get(Cache\Client::class);
 ```
 
+**TODO** keep going with examples
+
 
 ## License
 All contents of this package are licensed under the [MIT license].
