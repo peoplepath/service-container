@@ -87,9 +87,23 @@ Our main code will stay the same.
 ```php
 $client = $container->get(Cache\Client::class);
 ```
+Method `resolve` is useful for resolving any dependencies of a _callable_. Especially it's useful for `init` template method. See following example.
+```php
+abstract class Parent {
+  function __construct(Dependency $dependency, ServiceContainer $container) {
+    $this->dependency = $dependency;
+    $container->resolve([$this, 'init']);
+  }
+}
+
+class Child extends Parent {
+  function init(AhotherDependency $another) {
+    // ...
+  }
+}
+```
 
 **TODO** keep going with examples
-
 
 ## License
 All contents of this package are licensed under the [MIT license].
