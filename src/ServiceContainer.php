@@ -16,6 +16,9 @@ class ServiceContainer implements ContainerInterface
     /** @var bool */
     protected $defaultSingletons = true;
 
+    /** @var bool */
+    protected $eagerwireEnabled = false;
+
     /** @var callable[] */
     private $factories = [];
 
@@ -32,12 +35,15 @@ class ServiceContainer implements ContainerInterface
      *              container will resolve any subsequent dependencies with the
      *              same instance (singleton), FALSE will not save instances
      *              therefore container returns always fresh instance
+     * - eagerwire  TRUE will always try to resolve optional dependencies, FALSE
+     *              will omit resolution of optional parameters
      *
      * @param array $options options [autowire => bool, singletons => bool]
      */
     public function __construct(array $options=[]) {
         $this->autowireEnabled   = (bool) ($options['autowire'] ?? true);    // autowire by default
         $this->defaultSingletons = (bool) ($options['singletons'] ?? false); // don't create singletons by default
+        $this->eagerwireEnabled  = (bool) ($options['eagerwire'] ?? false);  // don't resolve optional args
     }
 
     /**
@@ -143,7 +149,7 @@ class ServiceContainer implements ContainerInterface
                 $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
             } catch (\Throwable $t) {
                 unset($this->factories[$id]);
-                
+
                 // cannot create instance naively for some reason, keep going and try create factory then
                 if (!$this->autowireEnabled) {
                     throw new ServiceNotFoundException($id, $t);
@@ -161,6 +167,43 @@ class ServiceContainer implements ContainerInterface
         }
 
         return $instance;
+    }
+
+    /**
+     * Resolve dependencies by container, or with given arguments and call given
+     * callable with them
+     *
+     * @param callable $callable a callable to resolve
+     * @param array    $args     associative array of optional arguments
+     *
+     * @return mixed a result of given callable
+     */
+    public function resolve(callable $callable, array $args=[])
+    {
+        if ($callable instanceof \Closure || (is_string($callable) && function_exists($callable))) {
+            $reflection = new \ReflectionFunction($callable);
+        } elseif (is_string($callable)) {
+            $reflection = new \ReflectionMethod($callable);
+        } elseif (is_object($callable) && ($reflection = new \ReflectionObject($callable))->hasMethod('__invoke')) {
+            $reflection = $reflection->getMethod('__invoke');
+        } else {
+            $reflection = new \ReflectionMethod(...$callable);
+        }
+
+        $params = [];
+        foreach ($reflection->getParameters() as $param) {
+            if ($param->isOptional() && !$this->eagerwireEnabled) {
+                break;
+            } elseif (array_key_exists($name = $param->getName(), $args)) {
+                $params[] = $args[$name];
+            } elseif ($type = $param->getType()) {
+                $params[] = $this->get((string) $type);
+            } else {
+                throw new UnsupportedAutowireParamException($param);
+            }
+        }
+
+        return $callable(...$params);
     }
 
     /**
