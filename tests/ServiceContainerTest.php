@@ -42,6 +42,24 @@ class ServiceContainerTest extends TestCase
 
         $this->assertInstanceOf('Bar', $container->resolve($container->resolve('foo')));
     }
+
+    public function testGetForBuildInClass() {
+        $container = new ServiceContainer;
+
+        $this->assertInstanceOf('stdClass', $container->get('stdClass'));
+    }
+
+    public function testGetForAClass() {
+        $container = new ServiceContainer;
+
+        $this->assertInstanceOf('Bar', $container->get('Bar'));
+    }
+
+    public function testGetForBuildInClassWithDisabledAutowiring() {
+        $container = new ServiceContainer(['autowire' => false]);
+
+        $this->assertInstanceOf('stdClass', $container->get('stdClass'));
+    }
 }
 
 function foo(Foo $foo) {
