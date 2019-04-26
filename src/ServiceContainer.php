@@ -170,8 +170,7 @@ class ServiceContainer implements ContainerInterface
     }
 
     /**
-     * Resolve dependencies by container, or with given arguments and call given
-     * callable with them
+     * Resolve dependencies by container, or with given arguments
      *
      * @param callable $callable a callable to resolve
      * @param array    $args     associative array of optional arguments
@@ -203,7 +202,7 @@ class ServiceContainer implements ContainerInterface
             }
         }
 
-        return $callable(...$params);
+        return $params;
     }
 
     /**

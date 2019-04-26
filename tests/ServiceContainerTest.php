@@ -1,5 +1,6 @@
 <?php
 
+use IW\ClassWithSyntaxError;
 use IW\ServiceContainer;
 use PHPUnit\Framework\TestCase;
 
@@ -9,7 +10,10 @@ class ServiceContainerTest extends TestCase
     public function testResolveFunction() {
         $container = new ServiceContainer;
 
-        $this->assertInstanceOf('Foo', $container->resolve('foo'));
+        $params = $container->resolve('foo');
+        $this->assertIsArray($params);
+        $this->assertCount(1, $params);
+        $this->assertInstanceOf('Foo', $params[0]);
     }
 
     public function testResolveMethod() {
@@ -17,14 +21,21 @@ class ServiceContainerTest extends TestCase
 
         $foo = $container->get('Foo');
 
-        $this->assertInstanceOf('Bar', $container->resolve([$foo, 'bar']));
+        $params = $container->resolve([$foo, 'bar']);
+        $this->assertIsArray($params);
+        $this->assertCount(0, $params);
     }
 
     public function testResolveStaticMethod() {
         $container = new ServiceContainer;
 
-        $this->assertSame('Hello World', $container->resolve('Bar::hello'));
-        $this->assertSame('Hello World', $container->resolve(['Bar', 'hello']));
+        $params = $container->resolve('Bar::hello');
+        $this->assertIsArray($params);
+        $this->assertCount(0, $params);
+
+        $params = $container->resolve(['Bar', 'hello']);
+        $this->assertIsArray($params);
+        $this->assertCount(0, $params);
     }
 
     public function testResolveClosure() {
@@ -34,13 +45,21 @@ class ServiceContainerTest extends TestCase
             return Bar::hello($who);
         };
 
-        $this->assertSame('Hello Alice', $container->resolve($hello, ['who' => 'Alice']));
+        $params = $container->resolve($hello, ['who' => 'Alice']);
+        $this->assertIsArray($params);
+        $this->assertCount(1, $params);
+        $this->assertSame('Alice', $params[0]);
     }
 
     public function testResolveInvokable() {
         $container = new ServiceContainer;
 
-        $this->assertInstanceOf('Bar', $container->resolve($container->resolve('foo')));
+        $foo = $container->get('Foo');
+
+        $params = $container->resolve($foo);
+        $this->assertIsArray($params);
+        $this->assertCount(1, $params);
+        $this->assertInstanceOf('Bar', $params[0]);
     }
 
     public function testGetForBuildInClass() {
@@ -60,6 +79,18 @@ class ServiceContainerTest extends TestCase
 
         $this->assertInstanceOf('stdClass', $container->get('stdClass'));
     }
+
+    /**
+     * Due to a bug in PHP reflection which conceal the error
+     *
+     * @return void
+     */
+    public function testGetForClassWithSyntaxError() {
+        $container = new ServiceContainer;
+
+        $this->expectException(\ReflectionException::class);
+        $container->get(Bum::class);
+    }
 }
 
 function foo(Foo $foo) {
@@ -75,13 +106,19 @@ class Foo {
         return $this->_bar;
     }
 
-    public function __invoke() {
-        return $this->bar();
+    public function __invoke(Bar $bar) {
+        return $bar;
     }
 }
 
 class Bar {
     public static function hello(string $who='World'): string {
         return 'Hello ' . $who;
+    }
+}
+
+class Bum {
+    public function __construct(ClassWithSyntaxError $lovelyError) {
+
     }
 }
