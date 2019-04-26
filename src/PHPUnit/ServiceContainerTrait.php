@@ -21,6 +21,6 @@ trait ServiceContainerTrait
      *
      * @return ServiceContainer
      */
-    abstract protected function getServiceContainer(): ServiceContainer;
+    abstract protected static function getServiceContainer(): ServiceContainer;
 
 }
