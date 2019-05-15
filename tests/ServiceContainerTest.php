@@ -2,12 +2,49 @@
 
 use IW\ClassWithSyntaxError;
 use IW\ServiceContainer;
+use IW\ServiceContainer\CannotMakeServiceException;
+use IW\ServiceContainer\ServiceNotFoundException;
 use PHPUnit\Framework\TestCase;
 
 class ServiceContainerTest extends TestCase
 {
+    /**
+     * @testWith ["NotExists"]
+     *           ["Foo\\Bar"]
+     *           ["\\Foo\\Bar"]
+     */
+    function testGettingNonExistingClass(string $id) {
+        $container = new ServiceContainer;
 
-    public function testResolveFunction() {
+        $this->expectException(ServiceNotFoundException::class);
+        $this->expectExceptionMessage('Service object not found, id: ' . $id);
+        $container->get($id);
+    }
+
+    function testGettingClassWithConstructorError() {
+        $container = new ServiceContainer;
+
+        $this->expectException(CannotMakeServiceException::class);
+        $this->expectExceptionMessage('Cannot make service, id: ClassWithFalseConstructor');
+        $container->get(ClassWithFalseConstructor::class);
+    }
+
+    /**
+     * @testWith ["NotExists", false]
+     *           ["Foo", true]
+     *           ["Bar", true]
+     */
+    function testHas(string $id, bool $has) {
+        $container = new ServiceContainer;
+
+        if ($has) {
+            $this->assertTrue($container->has($id));
+        } else {
+            $this->assertFalse($container->has($id));
+        }
+    }
+
+    function testResolveFunction() {
         $container = new ServiceContainer;
 
         $params = $container->resolve('foo');
@@ -16,7 +53,7 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('Foo', $params[0]);
     }
 
-    public function testResolveMethod() {
+    function testResolveMethod() {
         $container = new ServiceContainer;
 
         $foo = $container->get('Foo');
@@ -26,7 +63,7 @@ class ServiceContainerTest extends TestCase
         $this->assertCount(0, $params);
     }
 
-    public function testResolveStaticMethod() {
+    function testResolveStaticMethod() {
         $container = new ServiceContainer;
 
         $params = $container->resolve('Bar::hello');
@@ -38,7 +75,7 @@ class ServiceContainerTest extends TestCase
         $this->assertCount(0, $params);
     }
 
-    public function testResolveClosure() {
+    function testResolveClosure() {
         $container = new ServiceContainer;
 
         $hello = function (string $who) {
@@ -51,7 +88,7 @@ class ServiceContainerTest extends TestCase
         $this->assertSame('Alice', $params[0]);
     }
 
-    public function testResolveInvokable() {
+    function testResolveInvokable() {
         $container = new ServiceContainer;
 
         $foo = $container->get('Foo');
@@ -62,19 +99,19 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('Bar', $params[0]);
     }
 
-    public function testGetForBuildInClass() {
+    function testGetForBuildInClass() {
         $container = new ServiceContainer;
 
         $this->assertInstanceOf('stdClass', $container->get('stdClass'));
     }
 
-    public function testGetForAClass() {
+    function testGetForAClass() {
         $container = new ServiceContainer;
 
         $this->assertInstanceOf('Bar', $container->get('Bar'));
     }
 
-    public function testGetForBuildInClassWithDisabledAutowiring() {
+    function testGetForBuildInClassWithDisabledAutowiring() {
         $container = new ServiceContainer(['autowire' => false]);
 
         $this->assertInstanceOf('stdClass', $container->get('stdClass'));
@@ -85,11 +122,11 @@ class ServiceContainerTest extends TestCase
      *
      * @return void
      */
-    public function testGetForClassWithSyntaxError() {
+    function testMakeForClassWithSyntaxError() {
         $container = new ServiceContainer;
 
         $this->expectException(\ReflectionException::class);
-        $container->get(Bum::class);
+        $container->make(Bum::class);
     }
 }
 
@@ -120,5 +157,11 @@ class Bar {
 class Bum {
     public function __construct(ClassWithSyntaxError $lovelyError) {
 
+    }
+}
+
+class ClassWithFalseConstructor {
+    function __construct() {
+        throw new \Exception('blah blah');
     }
 }

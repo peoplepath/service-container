@@ -2,11 +2,14 @@
 
 namespace IW;
 
-use Psr\Container\ContainerInterface;
 use IW\ServiceContainer\CannotAutowireInterfaceException;
+use IW\ServiceContainer\CannotMakeServiceException;
 use IW\ServiceContainer\EmptyResultFromFactoryException;
 use IW\ServiceContainer\ServiceNotFoundException;
 use IW\ServiceContainer\UnsupportedAutowireParamException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 class ServiceContainer implements ContainerInterface
 {
@@ -61,7 +64,15 @@ class ServiceContainer implements ContainerInterface
             return $this->instances[$id]; // try load a singleton if saved
         }
 
-        $instance = $this->make($id);
+        try {
+            $instance = $this->make($id);
+        } catch (\Throwable $error) {
+            if (sprintf("Class '%s' not found", $id) === $error->getMessage()) {
+                throw new ServiceNotFoundException($id, $error);
+            } else {
+                throw new CannotMakeServiceException($id, $error);
+            }
+        }
 
         if ($this->defaultSingletons) {
             $this->instances[$id] = $instance;
@@ -147,12 +158,12 @@ class ServiceContainer implements ContainerInterface
             try {
                 // first try create instance naively
                 $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
-            } catch (\Throwable $t) {
+            } catch (\ArgumentCountError $error) {
                 unset($this->factories[$id]);
 
                 // cannot create instance naively for some reason, keep going and try create factory then
                 if (!$this->autowireEnabled) {
-                    throw new ServiceNotFoundException($id, $t);
+                    throw $error;
                 }
 
                 $this->factories[$id] = self::buildFactory($id);
