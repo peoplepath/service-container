@@ -2,7 +2,9 @@
 
 use IW\ClassWithSyntaxError;
 use IW\ServiceContainer;
+use IW\ServiceContainer\CannotAutowireInterfaceException;
 use IW\ServiceContainer\CannotMakeServiceException;
+use IW\ServiceContainer\ReflectionError;
 use IW\ServiceContainer\ServiceNotFoundException;
 use PHPUnit\Framework\TestCase;
 
@@ -29,12 +31,88 @@ class ServiceContainerTest extends TestCase
         $container->get(ClassWithFalseConstructor::class);
     }
 
+    function testSettingAndUnsettingAService() {
+        $container = new ServiceContainer;
+
+        $service = new stdClass;
+        $container->set($id = random_bytes(10), $service);
+
+        $this->assertSame($service, $container->get($id));
+
+        $this->assertTrue($container->unset($id));
+
+        $this->expectException(ServiceNotFoundException::class);
+        $this->expectExceptionMessage('Service object not found, id: ' . $id);
+        $container->get($id);
+    }
+
+    function testUnsettingUnknownService() {
+        $container = new ServiceContainer;
+
+        $this->assertFalse($container->unset('ImNotSingleton'));
+    }
+
+    function testImplicitSingleton() {
+        $container = new ServiceContainer(['singletons' => true]);
+
+        // you always get singleton of same class (id)
+        $service = $container->get('Foo');
+        $this->assertSame($service, $container->get('Foo'));
+    }
+
+    /**
+     * @testWith ["AliasOfFoo", "Foo"]
+    *            ["AliasOfBar", "Bar"]
+     */
+    function testServiceAliasing(string $alias, string $id) {
+        $container = new ServiceContainer;
+
+        $container->alias($alias, $id);
+        $this->assertEquals($container->get($alias), $container->get($id));
+    }
+
+    function testExplicitSingleton() {
+        $container = new ServiceContainer(['singletons' => false]);
+
+        // by default it's generating always fresh instance
+        $service = $container->get('Foo');
+        $this->assertNotSame($service, $container->get('Foo'));
+
+        // after method singleton returns always a singleton
+        $container->singleton('Foo');
+        $service = $container->get('Foo');
+        $this->assertSame($service, $container->get('Foo'));
+    }
+
+    function testBindingCustomFactory() {
+        $container = new ServiceContainer;
+
+        $bar = $container->get('Bar');
+
+        $container->bind($id = uniqid(), function ($container) use ($bar) {
+            $service = new stdClass;
+            $service->foo = $container->get('Foo');
+            $service->bar = $bar;
+
+            return $service;
+        });
+
+        $service = $container->get($id);
+
+        $this->assertIsObject($service);
+        $this->assertInstanceOf('stdClass', $service);
+        $this->assertObjectHasAttribute('foo', $service);
+        $this->assertInstanceOf('Foo', $service->foo);
+        $this->assertObjectHasAttribute('bar', $service);
+        $this->assertSame($bar, $service->bar);
+    }
+
     /**
      * @testWith ["NotExists", false]
      *           ["Foo", true]
      *           ["Bar", true]
      */
-    function testHas(string $id, bool $has) {
+    function testHasMethod(string $id, bool $has) {
         $container = new ServiceContainer;
 
         if ($has) {
@@ -119,15 +197,31 @@ class ServiceContainerTest extends TestCase
 
     /**
      * Due to a bug in PHP reflection which conceal the error
-     *
-     * @return void
      */
     function testMakeForClassWithSyntaxError() {
         $container = new ServiceContainer;
 
-        $this->expectException(\ReflectionException::class);
+        $this->expectException(ReflectionError::class);
         $container->make(Bum::class);
     }
+
+    function testThatInterfaceCannotBeAutowired() {
+        $container = new ServiceContainer;
+
+        $this->expectException(CannotAutowireInterfaceException::class);
+        $this->expectExceptionMessage('Cannot autowire interface: CacheAdapterInterface');
+        $container->get(Cache::class);
+    }
+}
+
+interface CacheAdapterInterface {}
+
+class CacheAdapter implements CacheAdapterInterface {}
+
+class Cache {
+
+    function __construct(CacheAdapterInterface $adapter) {}
+
 }
 
 function foo(Foo $foo) {

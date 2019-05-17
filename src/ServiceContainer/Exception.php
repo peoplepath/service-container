@@ -4,7 +4,7 @@ namespace IW\ServiceContainer;
 
 use Psr\Container\ContainerExceptionInterface;
 
-class Exception extends \Exception implements ContainerExceptionInterface
+abstract class Exception extends \Exception implements ContainerExceptionInterface
 {
 
     public function __construct(string $message = null, \Throwable $previous = null) {
