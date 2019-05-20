@@ -2,7 +2,7 @@
 
 namespace IW\PHPUnit;
 
-trait DepsProviderTrait
+trait ServiceContainerDepsProviderTrait
 {
     use ServiceContainerProviderTrait;
 
@@ -45,7 +45,7 @@ trait DepsProviderTrait
 
         try {
             $this->$provider(...$this->getServiceContainer()->resolve([$this, $provider]));
-        } catch (\TypeError $error) {
+        } catch (\Error $error) {
             if (!method_exists($this, $provider)) {
                 throw new \InvalidArgumentException('Method ' . $method . ' does not exists');
             }

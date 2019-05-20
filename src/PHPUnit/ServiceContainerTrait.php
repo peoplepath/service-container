@@ -6,7 +6,6 @@ use IW\ServiceContainer;
 
 trait ServiceContainerTrait
 {
-    use DepsProviderTrait;
+    use ServiceContainerDepsProviderTrait;
     use ServiceContainerDataProviderTrait;
-
 }

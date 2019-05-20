@@ -4,8 +4,10 @@ use IW\ClassWithSyntaxError;
 use IW\ServiceContainer;
 use IW\ServiceContainer\CannotAutowireInterfaceException;
 use IW\ServiceContainer\CannotMakeServiceException;
+use IW\ServiceContainer\EmptyResultFromFactoryException;
 use IW\ServiceContainer\ReflectionError;
 use IW\ServiceContainer\ServiceNotFoundException;
+use IW\ServiceContainer\UnsupportedAutowireParamException;
 use PHPUnit\Framework\TestCase;
 
 class ServiceContainerTest extends TestCase
@@ -177,6 +179,22 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('Bar', $params[0]);
     }
 
+    function testCannotResolveScalarTypes() {
+        $container = new ServiceContainer;
+
+        $this->expectException(UnsupportedAutowireParamException::class);
+        $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> string $who ]');
+        $container->resolve('\hello');
+    }
+
+    function testCannotResolveMissingHintTypes() {
+        $container = new ServiceContainer;
+
+        $this->expectException(UnsupportedAutowireParamException::class);
+        $this->expectExceptionMessage('No type hint for param: Parameter #1 [ <required> $value ]');
+        $container->resolve('\pass');
+    }
+
     function testGetForBuildInClass() {
         $container = new ServiceContainer;
 
@@ -211,6 +229,42 @@ class ServiceContainerTest extends TestCase
         $this->expectException(CannotAutowireInterfaceException::class);
         $this->expectExceptionMessage('Cannot autowire interface: CacheAdapterInterface');
         $container->get(Cache::class);
+    }
+
+    function testThatScalarCannotBeAutowired() {
+        $container = new ServiceContainer;
+
+        $this->expectException(UnsupportedAutowireParamException::class);
+        $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> int $userId ]');
+        $container->get(ClassWithUnsupportedParam::class);
+    }
+
+    function testCannotMakeServiceWhenAutowiringIsDisabled() {
+        $container = new ServiceContainer(['autowire' => false]);
+
+        $this->expectException(CannotMakeServiceException::class);
+        $this->expectExceptionMessage('Cannot make service, id: Foo');
+        $container->make(Foo::class);
+    }
+
+    function testGettingUnknownServiceWhenAutowiringIsDisabled() {
+        $container = new ServiceContainer(['autowire' => false]);
+
+        $this->expectException(ServiceNotFoundException::class);
+        $this->expectExceptionMessage('Service object not found, id: WhoKnows');
+        $container->get('WhoKnows');
+    }
+
+    function testProperFailWhenFactoryIsDefinedBadly() {
+        $container = new ServiceContainer;
+
+        $container->bind('Poo', function () {
+            // this factory returns nothing
+        });
+
+        $this->expectException(EmptyResultFromFactoryException::class);
+        $this->expectExceptionMessage('Empty result from factory, id: Poo');
+        $container->make('Poo');
     }
 }
 
@@ -258,4 +312,18 @@ class ClassWithFalseConstructor {
     function __construct() {
         throw new \Exception('blah blah');
     }
+}
+
+class ClassWithUnsupportedParam {
+    function __construct(int $userId) {
+
+    }
+}
+
+function hello(string $who): string {
+    return 'Hello ' . $who;
+}
+
+function pass(Foo $foo, $value): \Closure {
+
 }

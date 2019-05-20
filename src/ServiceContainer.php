@@ -210,7 +210,7 @@ class ServiceContainer implements ContainerInterface
                 break;
             } elseif (array_key_exists($name = $param->getName(), $args)) {
                 $params[] = $args[$name];
-            } elseif ($type = $param->getType()) {
+            } elseif (($type = $param->getType()) && ! $type->isBuiltin()) {
                 $params[] = $this->get((string) $type);
             } else {
                 throw new UnsupportedAutowireParamException($param);
