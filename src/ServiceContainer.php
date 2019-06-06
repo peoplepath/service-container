@@ -174,16 +174,8 @@ class ServiceContainer implements ContainerInterface
             if (null === $instance) {
                 throw new EmptyResultFromFactoryException($id);
             }
-        } catch (NotFoundExceptionInterface|ContainerExceptionInterface $exception) {
-            throw $exception;
-        } catch (\ReflectionException $exception) {
-            throw new ReflectionError($exception);
         } catch (\Throwable $error) {
-            if (sprintf("Class '%s' not found", $id) === $error->getMessage()) {
-                throw new ServiceNotFoundException($id, $error);
-            } else {
-                throw new CannotMakeServiceException($id, $error);
-            }
+            $this->handleError($id, $error);
         }
 
         return $instance;
@@ -267,6 +259,40 @@ class ServiceContainer implements ContainerInterface
         }
 
         return false;
+    }
+
+    /**
+     * Handles an error when making a service
+     *
+     * @param string     $id    ID of entry we're creating
+     * @param \Throwable $error en error
+     *
+     * @return void
+     */
+    private function handleError(string $id, \Throwable $error): void {
+        if ($error instanceof NotFoundExceptionInterface) {
+            throw $error;
+        }
+
+        if ($error instanceof ContainerExceptionInterface) {
+            throw $error;
+        }
+
+        if ($error instanceof \ReflectionException) {
+            throw new ReflectionError($error);
+        }
+
+        if (\sprintf("Class '%s' not found", $id) === $error->getMessage()) {
+            throw new ServiceNotFoundException($id, $error);
+        }
+
+        if (!$this->autowireEnabled) {
+            if ($error instanceof \ArgumentCountError) {
+                throw new CannotMakeServiceException($id, $error);
+            }
+        }
+
+        throw $error;
     }
 
     private static function buildFactory($classname)

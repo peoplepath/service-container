@@ -25,11 +25,11 @@ class ServiceContainerTest extends TestCase
         $container->get($id);
     }
 
-    function testGettingClassWithConstructorError() {
+    function testThatExceptionNotRelatedWithServiceMakingAreDisclosed() {
         $container = new ServiceContainer;
 
-        $this->expectException(CannotMakeServiceException::class);
-        $this->expectExceptionMessage('Cannot make service, id: ClassWithFalseConstructor');
+        $this->expectException('Exception');
+        $this->expectExceptionMessage('blah blah');
         $container->get(ClassWithFalseConstructor::class);
     }
 
