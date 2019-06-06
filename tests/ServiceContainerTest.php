@@ -266,6 +266,12 @@ class ServiceContainerTest extends TestCase
         $this->expectExceptionMessage('Empty result from factory, id: Poo');
         $container->make('Poo');
     }
+
+    function testHasMethodReturnsFalseNotAnExceptionIfAutowiringIsDisabled() {
+        $container = new ServiceContainer(['autowire' => false]);
+
+        $this->assertFalse($container->has(Foo::class));
+    }
 }
 
 interface CacheAdapterInterface {}

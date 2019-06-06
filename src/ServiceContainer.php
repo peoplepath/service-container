@@ -86,6 +86,11 @@ class ServiceContainer implements ContainerInterface
      * @return bool
      */
     public function has($id): bool {
+        // do not attempt create a service when "autowire" is disabled
+        if (!$this->autowireEnabled) {
+            return isset($this->instances[$id]);
+        }
+
         try {
             $this->get($id); // attempt create a service
         } catch (ServiceNotFoundException $e) {
