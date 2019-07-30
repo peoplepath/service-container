@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use IW\ClassWithSyntaxError;
 use IW\ServiceContainer;
 use IW\ServiceContainer\CannotAutowireInterfaceException;
@@ -17,26 +19,29 @@ class ServiceContainerTest extends TestCase
      *           ["Foo\\Bar"]
      *           ["\\Foo\\Bar"]
      */
-    function testGettingNonExistingClass(string $id) {
-        $container = new ServiceContainer;
+    public function testGettingNonExistingClass(string $id) : void
+    {
+        $container = new ServiceContainer();
 
         $this->expectException(ServiceNotFoundException::class);
         $this->expectExceptionMessage('Service object not found, id: ' . $id);
         $container->get($id);
     }
 
-    function testThatExceptionNotRelatedWithServiceMakingAreDisclosed() {
-        $container = new ServiceContainer;
+    public function testThatExceptionNotRelatedWithServiceMakingAreDisclosed() : void
+    {
+        $container = new ServiceContainer();
 
         $this->expectException('Exception');
         $this->expectExceptionMessage('blah blah');
         $container->get(ClassWithFalseConstructor::class);
     }
 
-    function testSettingAndUnsettingAService() {
-        $container = new ServiceContainer;
+    public function testSettingAndUnsettingAService() : void
+    {
+        $container = new ServiceContainer();
 
-        $service = new stdClass;
+        $service            = new stdClass();
         $container->set($id = random_bytes(10), $service);
 
         $this->assertSame($service, $container->get($id));
@@ -48,13 +53,15 @@ class ServiceContainerTest extends TestCase
         $container->get($id);
     }
 
-    function testUnsettingUnknownService() {
-        $container = new ServiceContainer;
+    public function testUnsettingUnknownService() : void
+    {
+        $container = new ServiceContainer();
 
         $this->assertFalse($container->unset('ImNotSingleton'));
     }
 
-    function testImplicitSingleton() {
+    public function testImplicitSingleton() : void
+    {
         $container = new ServiceContainer(['singletons' => true]);
 
         // you always get singleton of same class (id)
@@ -64,16 +71,18 @@ class ServiceContainerTest extends TestCase
 
     /**
      * @testWith ["AliasOfFoo", "Foo"]
-    *            ["AliasOfBar", "Bar"]
+     *            ["AliasOfBar", "Bar"]
      */
-    function testServiceAliasing(string $alias, string $id) {
-        $container = new ServiceContainer;
+    public function testServiceAliasing(string $alias, string $id) : void
+    {
+        $container = new ServiceContainer();
 
         $container->alias($alias, $id);
         $this->assertEquals($container->get($alias), $container->get($id));
     }
 
-    function testExplicitSingleton() {
+    public function testExplicitSingleton() : void
+    {
         $container = new ServiceContainer(['singletons' => false]);
 
         // by default it's generating always fresh instance
@@ -86,13 +95,14 @@ class ServiceContainerTest extends TestCase
         $this->assertSame($service, $container->get('Foo'));
     }
 
-    function testBindingCustomFactory() {
-        $container = new ServiceContainer;
+    public function testBindingCustomFactory() : void
+    {
+        $container = new ServiceContainer();
 
         $bar = $container->get('Bar');
 
-        $container->bind($id = uniqid(), function (ServiceContainer $container) use ($bar) {
-            $service = new stdClass;
+        $container->bind($id = uniqid(), static function (ServiceContainer $container) use ($bar) {
+            $service      = new stdClass();
             $service->foo = $container->get('Foo');
             $service->bar = $bar;
 
@@ -114,8 +124,9 @@ class ServiceContainerTest extends TestCase
      *           ["Foo", true]
      *           ["Bar", true]
      */
-    function testHasMethod(string $id, bool $has) {
-        $container = new ServiceContainer;
+    public function testHasMethod(string $id, bool $has) : void
+    {
+        $container = new ServiceContainer();
 
         if ($has) {
             $this->assertTrue($container->has($id));
@@ -124,8 +135,9 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    function testResolveFunction() {
-        $container = new ServiceContainer;
+    public function testResolveFunction() : void
+    {
+        $container = new ServiceContainer();
 
         $params = $container->resolve('foo');
         $this->assertIsArray($params);
@@ -133,8 +145,9 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('Foo', $params[0]);
     }
 
-    function testResolveMethod() {
-        $container = new ServiceContainer;
+    public function testResolveMethod() : void
+    {
+        $container = new ServiceContainer();
 
         $foo = $container->get('Foo');
 
@@ -143,8 +156,9 @@ class ServiceContainerTest extends TestCase
         $this->assertCount(0, $params);
     }
 
-    function testResolveStaticMethod() {
-        $container = new ServiceContainer;
+    public function testResolveStaticMethod() : void
+    {
+        $container = new ServiceContainer();
 
         $params = $container->resolve('Bar::hello');
         $this->assertIsArray($params);
@@ -155,10 +169,11 @@ class ServiceContainerTest extends TestCase
         $this->assertCount(0, $params);
     }
 
-    function testResolveClosure() {
-        $container = new ServiceContainer;
+    public function testResolveClosure() : void
+    {
+        $container = new ServiceContainer();
 
-        $hello = function (string $who) {
+        $hello = static function (string $who) {
             return Bar::hello($who);
         };
 
@@ -168,8 +183,9 @@ class ServiceContainerTest extends TestCase
         $this->assertSame('Alice', $params[0]);
     }
 
-    function testResolveInvokable() {
-        $container = new ServiceContainer;
+    public function testResolveInvokable() : void
+    {
+        $container = new ServiceContainer();
 
         $foo = $container->get('Foo');
 
@@ -179,35 +195,40 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('Bar', $params[0]);
     }
 
-    function testCannotResolveScalarTypes() {
-        $container = new ServiceContainer;
+    public function testCannotResolveScalarTypes() : void
+    {
+        $container = new ServiceContainer();
 
         $this->expectException(UnsupportedAutowireParamException::class);
         $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> string $who ]');
         $container->resolve('\hello');
     }
 
-    function testCannotResolveMissingHintTypes() {
-        $container = new ServiceContainer;
+    public function testCannotResolveMissingHintTypes() : void
+    {
+        $container = new ServiceContainer();
 
         $this->expectException(UnsupportedAutowireParamException::class);
         $this->expectExceptionMessage('No type hint for param: Parameter #1 [ <required> $value ]');
         $container->resolve('\pass');
     }
 
-    function testGetForBuildInClass() {
-        $container = new ServiceContainer;
+    public function testGetForBuildInClass() : void
+    {
+        $container = new ServiceContainer();
 
         $this->assertInstanceOf('stdClass', $container->get('stdClass'));
     }
 
-    function testGetForAClass() {
-        $container = new ServiceContainer;
+    public function testGetForAClass() : void
+    {
+        $container = new ServiceContainer();
 
         $this->assertInstanceOf('Bar', $container->get('Bar'));
     }
 
-    function testGetForBuildInClassWithDisabledAutowiring() {
+    public function testGetForBuildInClassWithDisabledAutowiring() : void
+    {
         $container = new ServiceContainer(['autowire' => false]);
 
         $this->assertInstanceOf('stdClass', $container->get('stdClass'));
@@ -216,30 +237,34 @@ class ServiceContainerTest extends TestCase
     /**
      * Due to a bug in PHP reflection which conceal the error
      */
-    function testMakeForClassWithSyntaxError() {
-        $container = new ServiceContainer;
+    public function testMakeForClassWithSyntaxError() : void
+    {
+        $container = new ServiceContainer();
 
         $this->expectException(ReflectionError::class);
         $container->make(Bum::class);
     }
 
-    function testThatInterfaceCannotBeAutowired() {
-        $container = new ServiceContainer;
+    public function testThatInterfaceCannotBeAutowired() : void
+    {
+        $container = new ServiceContainer();
 
         $this->expectException(CannotAutowireInterfaceException::class);
         $this->expectExceptionMessage('Cannot autowire interface: CacheAdapterInterface');
         $container->get(Cache::class);
     }
 
-    function testThatScalarCannotBeAutowired() {
-        $container = new ServiceContainer;
+    public function testThatScalarCannotBeAutowired() : void
+    {
+        $container = new ServiceContainer();
 
         $this->expectException(UnsupportedAutowireParamException::class);
         $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> int $userId ]');
         $container->get(ClassWithUnsupportedParam::class);
     }
 
-    function testCannotMakeServiceWhenAutowiringIsDisabled() {
+    public function testCannotMakeServiceWhenAutowiringIsDisabled() : void
+    {
         $container = new ServiceContainer(['autowire' => false]);
 
         $this->expectException(CannotMakeServiceException::class);
@@ -247,7 +272,8 @@ class ServiceContainerTest extends TestCase
         $container->make(Foo::class);
     }
 
-    function testGettingUnknownServiceWhenAutowiringIsDisabled() {
+    public function testGettingUnknownServiceWhenAutowiringIsDisabled() : void
+    {
         $container = new ServiceContainer(['autowire' => false]);
 
         $this->expectException(ServiceNotFoundException::class);
@@ -255,10 +281,11 @@ class ServiceContainerTest extends TestCase
         $container->get('WhoKnows');
     }
 
-    function testProperFailWhenFactoryIsDefinedBadly() {
-        $container = new ServiceContainer;
+    public function testProperFailWhenFactoryIsDefinedBadly() : void
+    {
+        $container = new ServiceContainer();
 
-        $container->bind('Poo', function () {
+        $container->bind('Poo', static function () : void {
             // this factory returns nothing
         });
 
@@ -267,16 +294,18 @@ class ServiceContainerTest extends TestCase
         $container->make('Poo');
     }
 
-    function testHasMethodReturnsFalseNotAnExceptionIfAutowiringIsDisabled() {
+    public function testHasMethodReturnsFalseNotAnExceptionIfAutowiringIsDisabled() : void
+    {
         $container = new ServiceContainer(['autowire' => false]);
 
         $this->assertFalse($container->has(Foo::class));
     }
 
-    public function testResolvingArbitraryFactoryParams() {
-        $container = new ServiceContainer;
+    public function testResolvingArbitraryFactoryParams() : void
+    {
+        $container = new ServiceContainer();
 
-        $container->bind('get_me_a_foo', function (Foo $foo) {
+        $container->bind('get_me_a_foo', static function (Foo $foo) {
             return $foo;
         });
 
@@ -284,62 +313,79 @@ class ServiceContainerTest extends TestCase
     }
 }
 
-interface CacheAdapterInterface {}
-
-class CacheAdapter implements CacheAdapterInterface {}
-
-class Cache {
-
-    function __construct(CacheAdapterInterface $adapter) {}
-
+interface CacheAdapterInterface
+{
 }
 
-function foo(Foo $foo) {
+class CacheAdapter implements CacheAdapterInterface
+{
+}
+
+class Cache
+{
+    function __construct(CacheAdapterInterface $adapter)
+    {
+    }
+}
+
+function foo(Foo $foo)
+{
     return $foo;
 }
 
-class Foo {
-    public function __construct(Bar $bar) {
+class Foo
+{
+    public function __construct(Bar $bar)
+    {
         $this->_bar = $bar;
     }
 
-    public function bar(): Bar {
+    public function bar() : Bar
+    {
         return $this->_bar;
     }
 
-    public function __invoke(Bar $bar) {
+    public function __invoke(Bar $bar)
+    {
         return $bar;
     }
 }
 
-class Bar {
-    public static function hello(string $who='World'): string {
+class Bar
+{
+    public static function hello(string $who = 'World') : string
+    {
         return 'Hello ' . $who;
     }
 }
 
-class Bum {
-    public function __construct(ClassWithSyntaxError $lovelyError) {
-
+class Bum
+{
+    public function __construct(ClassWithSyntaxError $lovelyError)
+    {
     }
 }
 
-class ClassWithFalseConstructor {
-    function __construct() {
-        throw new \Exception('blah blah');
+class ClassWithFalseConstructor
+{
+    function __construct()
+    {
+        throw new Exception('blah blah');
     }
 }
 
-class ClassWithUnsupportedParam {
-    function __construct(int $userId) {
-
+class ClassWithUnsupportedParam
+{
+    function __construct(int $userId)
+    {
     }
 }
 
-function hello(string $who): string {
+function hello(string $who) : string
+{
     return 'Hello ' . $who;
 }
 
-function pass(Foo $foo, $value): \Closure {
-
+function pass(Foo $foo, $value) : Closure
+{
 }

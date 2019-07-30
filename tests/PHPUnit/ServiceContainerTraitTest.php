@@ -1,30 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace IW\PHPUnit;
 
 use IW\ServiceContainer;
+use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
+use stdClass;
 
 /**
  * @depsProvider initClass
  */
-final class ServiceContainerTraitTest extends \PHPUnit\Framework\TestCase
+final class ServiceContainerTraitTest extends TestCase
 {
     use ServiceContainerTrait;
 
+    /** @var stdClass */
     private $classDep;
 
-    public function initClass(\stdClass $classDep) {
+    /** @var stdClass */
+    private $methodDep;
+
+    public function initClass(stdClass $classDep) : void
+    {
         $this->classDep = $classDep;
     }
 
-    public  function initMethod(\stdClass $methodDep) {
+    public function initMethod(stdClass $methodDep) : void
+    {
         $this->methodDep = $methodDep;
     }
 
     /**
      * @dataProvider ServiceContainer
      */
-    function testDataProviderServiceContainer(\stdClass $myService) {
+    public function testDataProviderServiceContainer(stdClass $myService) : void
+    {
         $this->assertInstanceOf('stdClass', $myService);
 
         $data = $this->ServiceContainer('testDataProviderServiceContainer');
@@ -37,19 +49,22 @@ final class ServiceContainerTraitTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf('stdClass', $data[0][0]);
     }
 
-    function testClassDepsProvider() {
+    public function testClassDepsProvider() : void
+    {
         $this->assertInstanceOf('stdClass', $this->classDep);
     }
 
     /**
      * @depsProvider initMethod
      */
-    function testMethodDepsProvider() {
+    public function testMethodDepsProvider() : void
+    {
         $this->assertInstanceOf('stdClass', $this->methodDep);
     }
 
-    function testUnknownMethodDepsProvider() {
-        $reflectionMethod = new \ReflectionMethod($this, 'callDepsProvider');
+    public function testUnknownMethodDepsProvider() : void
+    {
+        $reflectionMethod = new ReflectionMethod($this, 'callDepsProvider');
         $reflectionMethod->setAccessible(true);
 
         $this->expectException('InvalidArgumentException');
@@ -57,8 +72,9 @@ final class ServiceContainerTraitTest extends \PHPUnit\Framework\TestCase
         $reflectionMethod->invoke($this, 'unknown');
     }
 
-    function testProtectedMethodDepsProvider() {
-        $reflectionMethod = new \ReflectionMethod($this, 'callDepsProvider');
+    public function testProtectedMethodDepsProvider() : void
+    {
+        $reflectionMethod = new ReflectionMethod($this, 'callDepsProvider');
         $reflectionMethod->setAccessible(true);
 
         $this->expectException('InvalidArgumentException');
@@ -66,8 +82,9 @@ final class ServiceContainerTraitTest extends \PHPUnit\Framework\TestCase
         $reflectionMethod->invoke($this, 'protectedDepsProvider');
     }
 
-    function testBrokenDepsProvider() {
-        $reflectionMethod = new \ReflectionMethod($this, 'callDepsProvider');
+    public function testBrokenDepsProvider() : void
+    {
+        $reflectionMethod = new ReflectionMethod($this, 'callDepsProvider');
         $reflectionMethod->setAccessible(true);
 
         $this->expectException('Error');
@@ -75,21 +92,21 @@ final class ServiceContainerTraitTest extends \PHPUnit\Framework\TestCase
         $reflectionMethod->invoke($this, 'brokenDepsProvider');
     }
 
-    protected function protectedDepsProvider(ServiceContainer $container) {
+    protected function protectedDepsProvider(ServiceContainer $container) : void
+    {
         // noop
     }
 
-    function brokenDepsProvider(): int {
+    function brokenDepsProvider() : int
+    {
         return 'string';
     }
 
     /**
      * Returns instance of your service container
-     *
-     * @return ServiceContainer
      */
-    protected static function getServiceContainer(): ServiceContainer {
-        return new ServiceContainer;
+    protected static function getServiceContainer() : ServiceContainer
+    {
+        return new ServiceContainer();
     }
 }
-
