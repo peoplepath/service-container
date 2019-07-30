@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace IW\ServiceContainer;
+
+use ReflectionException;
+use const PHP_EOL;
 
 class ReflectionError extends Exception
 {
-    public function __construct(\ReflectionException $reflectionException)
+    public function __construct(ReflectionException $reflectionException)
     {
         $message = $reflectionException->getMessage();
 

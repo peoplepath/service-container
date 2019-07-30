@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace IW\PHPUnit;
 
@@ -8,9 +10,6 @@ trait ServiceContainerProviderTrait
 {
     /**
      * Returns instance of your service container
-     *
-     * @return ServiceContainer
      */
-    abstract protected static function getServiceContainer(): ServiceContainer;
-
+    abstract protected static function getServiceContainer() : ServiceContainer;
 }

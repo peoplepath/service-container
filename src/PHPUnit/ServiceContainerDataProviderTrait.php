@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace IW\PHPUnit;
 
@@ -11,7 +13,8 @@ trait ServiceContainerDataProviderTrait
      *
      * @return void
      */
-    public function ServiceContainer(string $method): array {
+    public function ServiceContainer(string $method) : array
+    {
         return [$this->getServiceContainer()->resolve([$this, $method])];
     }
 }
