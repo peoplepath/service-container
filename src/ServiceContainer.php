@@ -48,6 +48,8 @@ class ServiceContainer implements ContainerInterface
         $this->autowireEnabled   = (bool) ($options['autowire'] ?? true);    // autowire by default
         $this->defaultSingletons = (bool) ($options['singletons'] ?? false); // don't create singletons by default
         $this->eagerwireEnabled  = (bool) ($options['eagerwire'] ?? false);  // don't resolve optional args
+
+        $this->instances[static::class] = $this; // we somehow must me able to resolve itself, obviously :-)
     }
 
     /**
@@ -169,7 +171,7 @@ class ServiceContainer implements ContainerInterface
                 }
             }
 
-            $instance = $instance ?? $this->factories[$id]($this, $id);
+            $instance = $instance ?? $this->factories[$id](...$this->resolve($this->factories[$id]));
 
             if (null === $instance) {
                 throw new EmptyResultFromFactoryException($id);
@@ -319,7 +321,7 @@ class ServiceContainer implements ContainerInterface
             $ids[] = $id->getName();
         }
 
-        return static function ($container) use ($class, $constructor, $ids) {
+        return static function (ServiceContainer $container) use ($class, $constructor, $ids) {
             $args = [];
             foreach ($ids as $id) {
                 $args[] = $container->get($id);
@@ -340,7 +342,7 @@ class ServiceContainer implements ContainerInterface
     }
 
     private static function buildAliasFactory($id) {
-        return static function ($container) use ($id) {
+        return static function (ServiceContainer $container) use ($id) {
             return $container->get($id);
         };
     }

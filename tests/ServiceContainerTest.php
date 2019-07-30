@@ -91,7 +91,7 @@ class ServiceContainerTest extends TestCase
 
         $bar = $container->get('Bar');
 
-        $container->bind($id = uniqid(), function ($container) use ($bar) {
+        $container->bind($id = uniqid(), function (ServiceContainer $container) use ($bar) {
             $service = new stdClass;
             $service->foo = $container->get('Foo');
             $service->bar = $bar;
@@ -271,6 +271,16 @@ class ServiceContainerTest extends TestCase
         $container = new ServiceContainer(['autowire' => false]);
 
         $this->assertFalse($container->has(Foo::class));
+    }
+
+    public function testResolvingArbitraryFactoryParams() {
+        $container = new ServiceContainer;
+
+        $container->bind('get_me_a_foo', function (Foo $foo) {
+            return $foo;
+        });
+
+        $this->assertInstanceOf(Foo::class, $container->get('get_me_a_foo'));
     }
 }
 
