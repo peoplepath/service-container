@@ -16,41 +16,12 @@ use function array_key_exists;
 
 class ServiceContainer implements ContainerInterface
 {
-    /** @var bool */
-    protected $autowireEnabled = true;
-
-    /** @var bool */
-    protected $defaultSingletons = true;
-
-    /** @var bool */
-    protected $eagerwireEnabled = false;
 
     /** @var callable[] */
     private $factories = [];
 
     /** @var mixed[] */
     private $instances = [];
-
-    /**
-     * Options:
-     * - autowire   TRUE will enable autowiring (container will try to resolve
-     *              dependencies in constructor automatically), FALSE will not
-     *              resolve any dependencies but container still be able resolve
-     *              instances of classes without dependencies
-     * - singletons when TRUEcontainer will save resolved instances by default,
-     *              container will resolve any subsequent dependencies with the
-     *              same instance (singleton), FALSE will not save instances
-     *              therefore container returns always fresh instance
-     * - eagerwire  TRUE will always try to resolve optional dependencies, FALSE
-     *              will omit resolution of optional parameters
-     *
-     * @param array $options options [autowire => bool, singletons => bool]
-     */
-    public function __construct(array $options=[]) {
-        $this->autowireEnabled   = (bool) ($options['autowire'] ?? true);    // autowire by default
-        $this->defaultSingletons = (bool) ($options['singletons'] ?? false); // don't create singletons by default
-        $this->eagerwireEnabled  = (bool) ($options['eagerwire'] ?? false);  // don't resolve optional args
-    }
 
     /**
      * Finds an entry of the container by its identifier and returns it.
@@ -71,13 +42,7 @@ class ServiceContainer implements ContainerInterface
             return $this; // resolve container by itself
         }
 
-        $instance = $this->make($id);
-
-        if ($this->defaultSingletons) {
-            $this->instances[$id] = $instance;
-        }
-
-        return $instance;
+        return $this->instances[$id] = $this->make($id);
     }
 
     /**
@@ -92,11 +57,6 @@ class ServiceContainer implements ContainerInterface
      * @return bool
      */
     public function has($id): bool {
-        // do not attempt create a service when "autowire" is disabled
-        if (!$this->autowireEnabled) {
-            return isset($this->instances[$id]);
-        }
-
         try {
             $this->get($id); // attempt create a service
         } catch (ServiceNotFoundException $e) {
@@ -165,12 +125,6 @@ class ServiceContainer implements ContainerInterface
                     $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
                 } catch (\ArgumentCountError|\Error $error) {
                     unset($this->factories[$id]);
-
-                    // cannot create instance naively for some reason, keep going and try create factory then
-                    if (!$this->autowireEnabled) {
-                        throw $error;
-                    }
-
                     $this->factories[$id] = self::buildFactory($id);
                 }
             }
@@ -197,19 +151,17 @@ class ServiceContainer implements ContainerInterface
      */
     public function resolve(callable $callable, array $args = [])
     {
-        $params = [];
-
         foreach (self::resolveIds($callable, $args) as [$id, $optional, $name]) {
-            if ($optional && ! $this->eagerwireEnabled) {
-                break;
-            } elseif (array_key_exists($name, $args)) {
+            if (array_key_exists($name, $args)) {
                 $params[] = $args[$name];
+            } elseif ($optional) {
+                break;
             } else {
                 $params[] = $this->get($id);
             }
         }
 
-        return $params;
+        return $params ?? [];
     }
 
     /**
@@ -223,21 +175,6 @@ class ServiceContainer implements ContainerInterface
     public function set(string $id, $entry): void
     {
         $this->instances[$id] = $entry;
-    }
-
-    /**
-     * Mark particular ID to be a singleton, this is useful when global singletons
-     * are disabled but you still few.
-     *
-     * Note in good design you should not need much singletons
-     *
-     * @param string $id ID of singleton to set
-     *
-     * @return void
-     */
-    public function singleton(string $id): void
-    {
-        $this->instances[$id] = $this->get($id);
     }
 
     /**
@@ -279,12 +216,6 @@ class ServiceContainer implements ContainerInterface
 
         if (\sprintf("Class '%s' not found", $id) === $error->getMessage()) {
             throw new ServiceNotFoundException($id, $error);
-        }
-
-        if (!$this->autowireEnabled) {
-            if ($error instanceof \ArgumentCountError) {
-                throw new CannotMakeServiceException($id, $error);
-            }
         }
 
         throw $error;
@@ -348,7 +279,7 @@ class ServiceContainer implements ContainerInterface
             $params = [];
 
             foreach ($ids as [$id, $optional]) {
-                if ($optional && ! $container->eagerwireEnabled) {
+                if ($optional) {
                     break;
                 }
 

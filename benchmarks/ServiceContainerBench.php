@@ -13,7 +13,7 @@ class ServiceContainerBench
 
     public function __construct()
     {
-        $this->container = new ServiceContainer(['singletons' => true]);
+        $this->container = new ServiceContainer();
     }
 
     /**

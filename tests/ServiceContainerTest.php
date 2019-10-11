@@ -81,20 +81,6 @@ class ServiceContainerTest extends TestCase
         $this->assertEquals($container->get($alias), $container->get($id));
     }
 
-    public function testExplicitSingleton() : void
-    {
-        $container = new ServiceContainer(['singletons' => false]);
-
-        // by default it's generating always fresh instance
-        $service = $container->get('Foo');
-        $this->assertNotSame($service, $container->get('Foo'));
-
-        // after method singleton returns always a singleton
-        $container->singleton('Foo');
-        $service = $container->get('Foo');
-        $this->assertSame($service, $container->get('Foo'));
-    }
-
     public function testBindingCustomFactory() : void
     {
         $container = new ServiceContainer();
@@ -263,15 +249,6 @@ class ServiceContainerTest extends TestCase
         $container->get(ClassWithUnsupportedParam::class);
     }
 
-    public function testCannotMakeServiceWhenAutowiringIsDisabled() : void
-    {
-        $container = new ServiceContainer(['autowire' => false]);
-
-        $this->expectException(CannotMakeServiceException::class);
-        $this->expectExceptionMessage('Cannot make service, id: Foo');
-        $container->make(Foo::class);
-    }
-
     public function testGettingUnknownServiceWhenAutowiringIsDisabled() : void
     {
         $container = new ServiceContainer(['autowire' => false]);
@@ -292,13 +269,6 @@ class ServiceContainerTest extends TestCase
         $this->expectException(EmptyResultFromFactoryException::class);
         $this->expectExceptionMessage('Empty result from factory, id: Poo');
         $container->make('Poo');
-    }
-
-    public function testHasMethodReturnsFalseNotAnExceptionIfAutowiringIsDisabled() : void
-    {
-        $container = new ServiceContainer(['autowire' => false]);
-
-        $this->assertFalse($container->has(Foo::class));
     }
 
     public function testResolvingArbitraryFactoryParams() : void
