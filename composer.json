@@ -20,5 +20,10 @@
         "psr-4": {
             "IW\\": "tests"
         }
+    },
+    "scripts": {
+        "bench": [
+            "phpbench run --report=aggregate benchmarks/"
+        ]
     }
 }
