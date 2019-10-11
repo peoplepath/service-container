@@ -11,6 +11,8 @@ use IW\ServiceContainer\UnsupportedAutowireParamException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use ReflectionParameter;
+use function array_key_exists;
 
 class ServiceContainer implements ContainerInterface
 {
@@ -144,7 +146,7 @@ class ServiceContainer implements ContainerInterface
      */
     public function bind(string $id, callable $factory): void
     {
-        $this->factories[$id] = $factory;
+        $this->factories[$id] = self::buildWrapFactory($factory);
     }
 
     /**
@@ -173,7 +175,7 @@ class ServiceContainer implements ContainerInterface
                 }
             }
 
-            $instance = $instance ?? $this->factories[$id](...$this->resolve($this->factories[$id]));
+            $instance = $instance ?? $this->factories[$id]($this);
 
             if (null === $instance) {
                 throw new EmptyResultFromFactoryException($id);
@@ -193,28 +195,17 @@ class ServiceContainer implements ContainerInterface
      *
      * @return mixed a result of given callable
      */
-    public function resolve(callable $callable, array $args=[])
+    public function resolve(callable $callable, array $args = [])
     {
-        if ($callable instanceof \Closure || (is_string($callable) && function_exists($callable))) {
-            $reflection = new \ReflectionFunction($callable);
-        } elseif (is_string($callable)) {
-            $reflection = new \ReflectionMethod($callable);
-        } elseif (is_object($callable) && ($reflection = new \ReflectionObject($callable))->hasMethod('__invoke')) {
-            $reflection = $reflection->getMethod('__invoke');
-        } else {
-            $reflection = new \ReflectionMethod(...$callable);
-        }
-
         $params = [];
-        foreach ($reflection->getParameters() as $param) {
-            if ($param->isOptional() && !$this->eagerwireEnabled) {
+
+        foreach (self::resolveIds($callable, $args) as [$id, $optional, $name]) {
+            if ($optional && ! $this->eagerwireEnabled) {
                 break;
-            } elseif (array_key_exists($name = $param->getName(), $args)) {
+            } elseif (array_key_exists($name, $args)) {
                 $params[] = $args[$name];
-            } elseif (($type = $param->getType()) && ! $type->isBuiltin()) {
-                $params[] = $this->get((string) $type);
             } else {
-                throw new UnsupportedAutowireParamException($param);
+                $params[] = $this->get($id);
             }
         }
 
@@ -323,7 +314,7 @@ class ServiceContainer implements ContainerInterface
             $ids[] = $id->getName();
         }
 
-        return static function (ServiceContainer $container) use ($class, $constructor, $ids) {
+        return static function ($container) use ($class, $constructor, $ids) {
             $args = [];
             foreach ($ids as $id) {
                 $args[] = $container->get($id);
@@ -343,10 +334,58 @@ class ServiceContainer implements ContainerInterface
         };
     }
 
-    private static function buildAliasFactory($id) {
-        return static function (ServiceContainer $container) use ($id) {
+    private static function buildAliasFactory(string $id) {
+        return static function ($container) use ($id) {
             return $container->get($id);
         };
     }
 
+    private static function buildWrapFactory(callable $factory): callable
+    {
+        $ids = self::resolveIds($factory);
+
+        return static function ($container) use ($factory, $ids) {
+            $params = [];
+
+            foreach ($ids as [$id, $optional]) {
+                if ($optional && ! $container->eagerwireEnabled) {
+                    break;
+                }
+
+                $params[] = $container->get($id);
+            }
+
+            return $factory(...$params);
+        };
+    }
+
+    private static function resolveIds(callable $callable, array $args = []) : array
+    {
+        if ($callable instanceof \Closure || (is_string($callable) && function_exists($callable))) {
+            $reflection = new \ReflectionFunction($callable);
+        } elseif (is_string($callable)) {
+            $reflection = new \ReflectionMethod($callable);
+        } elseif (is_object($callable) && ($reflection = new \ReflectionObject($callable))->hasMethod('__invoke')) {
+            $reflection = $reflection->getMethod('__invoke');
+        } else {
+            $reflection = new \ReflectionMethod(...$callable);
+        }
+
+        $ids = [];
+
+        foreach ($reflection->getParameters() as $param) {
+            $name     = $param->getName();
+            $optional = $param->isOptional();
+            $type     = $param->getType();
+
+            if ($type && (! $type->isBuiltin() || $optional || array_key_exists($name, $args))) {
+                $ids[] = [(string) $type, $optional, $param->getName()];
+                continue;
+            }
+
+            throw new UnsupportedAutowireParamException($param);
+        }
+
+        return $ids;
+    }
 }
