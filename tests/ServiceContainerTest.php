@@ -249,9 +249,9 @@ class ServiceContainerTest extends TestCase
         $container->get(ClassWithUnsupportedParam::class);
     }
 
-    public function testGettingUnknownServiceWhenAutowiringIsDisabled() : void
+    public function testGettingUnknownService() : void
     {
-        $container = new ServiceContainer(['autowire' => false]);
+        $container = new ServiceContainer();
 
         $this->expectException(ServiceNotFoundException::class);
         $this->expectExceptionMessage('Service object not found, id: WhoKnows');
