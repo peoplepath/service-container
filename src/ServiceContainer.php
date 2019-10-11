@@ -48,8 +48,6 @@ class ServiceContainer implements ContainerInterface
         $this->autowireEnabled   = (bool) ($options['autowire'] ?? true);    // autowire by default
         $this->defaultSingletons = (bool) ($options['singletons'] ?? false); // don't create singletons by default
         $this->eagerwireEnabled  = (bool) ($options['eagerwire'] ?? false);  // don't resolve optional args
-
-        $this->instances[static::class] = $this; // we somehow must me able to resolve itself, obviously :-)
     }
 
     /**
@@ -65,6 +63,10 @@ class ServiceContainer implements ContainerInterface
     public function get($id) {
         if (isset($this->instances[$id])) {
             return $this->instances[$id]; // try load a singleton if saved
+        }
+
+        if ($id === static::class) {
+            return $this; // resolve container by itself
         }
 
         $instance = $this->make($id);
