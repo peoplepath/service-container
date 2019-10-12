@@ -5,7 +5,6 @@ declare(strict_types=1);
 use IW\ClassWithSyntaxError;
 use IW\ServiceContainer;
 use IW\ServiceContainer\CannotAutowireInterfaceException;
-use IW\ServiceContainer\CannotMakeServiceException;
 use IW\ServiceContainer\EmptyResultFromFactoryException;
 use IW\ServiceContainer\ReflectionError;
 use IW\ServiceContainer\ServiceNotFoundException;
@@ -62,7 +61,7 @@ class ServiceContainerTest extends TestCase
 
     public function testImplicitSingleton() : void
     {
-        $container = new ServiceContainer(['singletons' => true]);
+        $container = new ServiceContainer();
 
         // you always get singleton of same class (id)
         $service = $container->get('Foo');
@@ -213,13 +212,6 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('Bar', $container->get('Bar'));
     }
 
-    public function testGetForBuildInClassWithDisabledAutowiring() : void
-    {
-        $container = new ServiceContainer(['autowire' => false]);
-
-        $this->assertInstanceOf('stdClass', $container->get('stdClass'));
-    }
-
     /**
      * Due to a bug in PHP reflection which conceal the error
      */
@@ -247,15 +239,6 @@ class ServiceContainerTest extends TestCase
         $this->expectException(UnsupportedAutowireParamException::class);
         $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> int $userId ]');
         $container->get(ClassWithUnsupportedParam::class);
-    }
-
-    public function testGettingUnknownService() : void
-    {
-        $container = new ServiceContainer();
-
-        $this->expectException(ServiceNotFoundException::class);
-        $this->expectExceptionMessage('Service object not found, id: WhoKnows');
-        $container->get('WhoKnows');
     }
 
     public function testProperFailWhenFactoryIsDefinedBadly() : void

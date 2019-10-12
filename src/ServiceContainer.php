@@ -3,7 +3,6 @@
 namespace IW;
 
 use IW\ServiceContainer\CannotAutowireInterfaceException;
-use IW\ServiceContainer\CannotMakeServiceException;
 use IW\ServiceContainer\EmptyResultFromFactoryException;
 use IW\ServiceContainer\ReflectionError;
 use IW\ServiceContainer\ServiceNotFoundException;
@@ -11,8 +10,9 @@ use IW\ServiceContainer\UnsupportedAutowireParamException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use ReflectionParameter;
 use function array_key_exists;
+use IW\ServiceContainer\FactoryBuilder\FactoryBuilder;
+use IW\ServiceContainer\FactoryBuilder\ClosureFactoryBuilder;
 
 class ServiceContainer implements ContainerInterface
 {
@@ -22,6 +22,14 @@ class ServiceContainer implements ContainerInterface
 
     /** @var mixed[] */
     private $instances = [];
+
+    /** @var FactoryBuilder */
+    private $factoryBuilder;
+
+    public function __construct(?FactoryBuilder $factoryBuilder = null)
+    {
+        $this->factoryBuilder = $factoryBuilder ?? new ClosureFactoryBuilder();
+    }
 
     /**
      * Finds an entry of the container by its identifier and returns it.
@@ -125,7 +133,7 @@ class ServiceContainer implements ContainerInterface
                     $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
                 } catch (\ArgumentCountError|\Error $error) {
                     unset($this->factories[$id]);
-                    $this->factories[$id] = self::buildFactory($id);
+                    $this->factories[$id] = $this->factoryBuilder->buildFactory($id);
                 }
             }
 
