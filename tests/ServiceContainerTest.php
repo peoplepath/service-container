@@ -2,21 +2,25 @@
 
 declare(strict_types=1);
 
-use IW\ClassWithSyntaxError;
-use IW\ServiceContainer;
+namespace IW;
+
+use IW\Fix\ClassWithFalseConstructor;
 use IW\ServiceContainer\CannotAutowireInterfaceException;
 use IW\ServiceContainer\EmptyResultFromFactoryException;
 use IW\ServiceContainer\ReflectionError;
 use IW\ServiceContainer\ServiceNotFoundException;
 use IW\ServiceContainer\UnsupportedAutowireParamException;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use function random_bytes;
+use function uniqid;
 
 class ServiceContainerTest extends TestCase
 {
     /**
-     * @testWith ["NotExists"]
-     *           ["Foo\\Bar"]
-     *           ["\\Foo\\Bar"]
+     * @testWith ["IW\\NotExists"]
+     *           ["IW\\Foo\\Bar"]
+     *           ["\\IW\\Foo\\Bar"]
      */
     public function testGettingNonExistingClass(string $id) : void
     {
@@ -40,7 +44,7 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $service            = new stdClass();
+        $service = new stdClass();
         $container->set($id = random_bytes(10), $service);
 
         $this->assertSame($service, $container->get($id));
@@ -64,13 +68,13 @@ class ServiceContainerTest extends TestCase
         $container = new ServiceContainer();
 
         // you always get singleton of same class (id)
-        $service = $container->get('Foo');
-        $this->assertSame($service, $container->get('Foo'));
+        $service = $container->get(Foo::class);
+        $this->assertSame($service, $container->get(Foo::class));
     }
 
     /**
-     * @testWith ["AliasOfFoo", "Foo"]
-     *            ["AliasOfBar", "Bar"]
+     * @testWith ["AliasOfFoo", "IW\\Foo"]
+     *            ["AliasOfBar", "IW\\Bar"]
      */
     public function testServiceAliasing(string $alias, string $id) : void
     {
@@ -84,11 +88,11 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $bar = $container->get('Bar');
+        $bar = $container->get(Bar::class);
 
         $container->bind($id = uniqid(), static function (ServiceContainer $container) use ($bar) {
             $service      = new stdClass();
-            $service->foo = $container->get('Foo');
+            $service->foo = $container->get(Foo::class);
             $service->bar = $bar;
 
             return $service;
@@ -99,15 +103,15 @@ class ServiceContainerTest extends TestCase
         $this->assertIsObject($service);
         $this->assertInstanceOf('stdClass', $service);
         $this->assertObjectHasAttribute('foo', $service);
-        $this->assertInstanceOf('Foo', $service->foo);
+        $this->assertInstanceOf(Foo::class, $service->foo);
         $this->assertObjectHasAttribute('bar', $service);
         $this->assertSame($bar, $service->bar);
     }
 
     /**
-     * @testWith ["NotExists", false]
-     *           ["Foo", true]
-     *           ["Bar", true]
+     * @testWith ["IW\\NotExists", false]
+     *           ["IW\\Foo", true]
+     *           ["IW\\Bar", true]
      */
     public function testHasMethod(string $id, bool $has) : void
     {
@@ -124,17 +128,17 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $params = $container->resolve('foo');
+        $params = $container->resolve(Foo::class);
         $this->assertIsArray($params);
         $this->assertCount(1, $params);
-        $this->assertInstanceOf('Foo', $params[0]);
+        $this->assertInstanceOf(Foo::class, $params[0]);
     }
 
     public function testResolveMethod() : void
     {
         $container = new ServiceContainer();
 
-        $foo = $container->get('Foo');
+        $foo = $container->get(Foo::class);
 
         $params = $container->resolve([$foo, 'bar']);
         $this->assertIsArray($params);
@@ -145,11 +149,11 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $params = $container->resolve('Bar::hello');
+        $params = $container->resolve('IW\Bar::hello');
         $this->assertIsArray($params);
         $this->assertCount(0, $params);
 
-        $params = $container->resolve(['Bar', 'hello']);
+        $params = $container->resolve([Bar::class, 'hello']);
         $this->assertIsArray($params);
         $this->assertCount(0, $params);
     }
@@ -172,12 +176,12 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $foo = $container->get('Foo');
+        $foo = $container->get(Foo::class);
 
         $params = $container->resolve($foo);
         $this->assertIsArray($params);
         $this->assertCount(1, $params);
-        $this->assertInstanceOf('Bar', $params[0]);
+        $this->assertInstanceOf(Bar::class, $params[0]);
     }
 
     public function testCannotResolveScalarTypes() : void
@@ -186,7 +190,7 @@ class ServiceContainerTest extends TestCase
 
         $this->expectException(UnsupportedAutowireParamException::class);
         $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> string $who ]');
-        $container->resolve('\hello');
+        $container->resolve('IW\hello');
     }
 
     public function testCannotResolveMissingHintTypes() : void
@@ -195,7 +199,7 @@ class ServiceContainerTest extends TestCase
 
         $this->expectException(UnsupportedAutowireParamException::class);
         $this->expectExceptionMessage('No type hint for param: Parameter #1 [ <required> $value ]');
-        $container->resolve('\pass');
+        $container->resolve('IW\pass');
     }
 
     public function testGetForBuildInClass() : void
@@ -209,7 +213,7 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $this->assertInstanceOf('Bar', $container->get('Bar'));
+        $this->assertInstanceOf(Bar::class, $container->get(Bar::class));
     }
 
     /**
@@ -228,7 +232,7 @@ class ServiceContainerTest extends TestCase
         $container = new ServiceContainer();
 
         $this->expectException(CannotAutowireInterfaceException::class);
-        $this->expectExceptionMessage('Cannot autowire interface: CacheAdapterInterface');
+        $this->expectExceptionMessage('Cannot autowire interface: IW\CacheAdapterInterface');
         $container->get(Cache::class);
     }
 
@@ -316,14 +320,6 @@ class Bum
 {
     public function __construct(ClassWithSyntaxError $lovelyError)
     {
-    }
-}
-
-class ClassWithFalseConstructor
-{
-    function __construct()
-    {
-        throw new Exception('blah blah');
     }
 }
 
