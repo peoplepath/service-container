@@ -34,12 +34,13 @@ class ServiceContainer implements ContainerInterface
     /**
      * Finds an entry of the container by its identifier and returns it.
      *
-     * @param string $id Identifier of the entry to look for.
+     * @template T
+     * @param class-string<T> $id Identifier of the entry to look for.
      *
      * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
      * @throws ContainerExceptionInterface Error while retrieving the entry.
      *
-     * @return mixed Entry.
+     * @return T
      */
     public function get($id) {
         if (isset($this->instances[$id])) {
@@ -120,9 +121,10 @@ class ServiceContainer implements ContainerInterface
     /**
      * Makes a new instance of a service. Dependencies are resolved from the container.
      *
-     * @param string $id ID of entry we want to create new instance of
+     * @template T
+     * @param class-string<T> $id ID of entry we want to create new instance of
      *
-     * @return mixed
+     * @return T
      */
     public function make(string $id)
     {
