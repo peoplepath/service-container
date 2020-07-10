@@ -70,17 +70,16 @@ class ServiceContainer implements ContainerInterface
     /**
      * Finds an entry of the container by its identifier and returns it.
      *
-     * @template T
      * @param class-string<T> $id Identifier of the entry to look for.
      *
-     * @return mixed Entry.
+     * @return T
      *
      * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
      * @throws ContainerExceptionInterface Error while retrieving the entry.
      *
-     * @return T
+     * @template T
      */
-    public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint
+    public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         if (isset($this->instances[$id])) {
             return $this->instances[$id]; // try load a singleton if saved
@@ -137,12 +136,13 @@ class ServiceContainer implements ContainerInterface
     /**
      * Makes a new instance of a service. Dependencies are resolved from the container.
      *
-     * @template T
      * @param class-string<T> $id ID of entry we want to create new instance of
      *
      * @return T
+     *
+     * @template T
      */
-    public function make(string $id)
+    public function make(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         $instance = $this->factory($id)($this);
 
