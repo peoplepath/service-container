@@ -3,13 +3,13 @@
     "description": "Lightweight yet powerful implementation of dependancy injection container with autowiring",
     "license": "MIT",
     "require": {
+        "php": "^7.2",
         "psr/container": "^1.0"
     },
     "require-dev": {
-        "phpspec/phpspec": "^5.1",
         "phpbench/phpbench": "@dev",
-        "phpunit/phpunit": "^8.0",
-        "doctrine/coding-standard": "^6.0"
+        "phpunit/phpunit": "^9.0",
+        "doctrine/coding-standard": "^8.0"
     },
     "autoload": {
         "psr-4": {

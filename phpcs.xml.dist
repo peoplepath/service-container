@@ -3,8 +3,11 @@
     <arg value="ps"/>
     <arg name="colors"/>
 
+    <file>benchmarks</file>
     <file>src</file>
     <file>tests</file>
 
-    <rule ref="Doctrine" />
+    <rule ref="Doctrine">
+        <exclude name="SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint" />
+    </rule>
 </ruleset>
