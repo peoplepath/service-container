@@ -105,6 +105,11 @@ class Child extends Parent {
 
 **TODO** keep going with examples
 
+## TODO
+```php
+$exception->getOrigin(); // returns first exception outside the framework (useful for avoiding of tracing)
+```
+
 ## License
 All contents of this package are licensed under the [MIT license].
 
