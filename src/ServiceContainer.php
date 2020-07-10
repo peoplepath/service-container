@@ -1,34 +1,70 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace IW;
 
-use IW\ServiceContainer\CannotAutowireInterfaceException;
-use IW\ServiceContainer\EmptyResultFromFactoryException;
-use IW\ServiceContainer\ReflectionError;
-use IW\ServiceContainer\ServiceNotFoundException;
-use IW\ServiceContainer\UnsupportedAutowireParamException;
+use IW\ServiceContainer\AliasFactory;
+use IW\ServiceContainer\CallableFactory;
+use IW\ServiceContainer\ClassnameFactory;
+use IW\ServiceContainer\EmptyResultFromFactory;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
-use function array_key_exists;
-use IW\ServiceContainer\FactoryBuilder\FactoryBuilder;
-use IW\ServiceContainer\FactoryBuilder\ClosureFactoryBuilder;
+use Throwable;
 
 class ServiceContainer implements ContainerInterface
 {
-
     /** @var callable[] */
     private $factories = [];
 
     /** @var mixed[] */
     private $instances = [];
 
-    /** @var FactoryBuilder */
-    private $factoryBuilder;
-
-    public function __construct(?FactoryBuilder $factoryBuilder = null)
+    /**
+     * Sets an alias for a dependency, it's useful for binding implementations
+     * to a interface. Container will resolve alias as late as possible.
+     *
+     * Example:
+     * <code>
+     * interface Logger {}
+     * class FileLogger implements Logger {}
+     * class Service { function __construct(Logger $logger) {} }
+     *
+     * $container->alias(Logger::class, FileLogger::class);
+     * $service = $container->get(Service::class);
+     * </code>
+     *
+     * @param string $alias an ID for aliased dependency
+     * @param string $id    an ID of instance which will be alias resolve with
+     */
+    public function alias(string $alias, string $id): void
     {
-        $this->factoryBuilder = $factoryBuilder ?? new ClosureFactoryBuilder();
+        $this->factories[$alias] = new AliasFactory($id);
+    }
+
+    /**
+     * Bind a factory to an instance, it's useful for resolving complex dependencies
+     * where manually (eg. database connection)
+     *
+     * @param string   $id      ID of entry we want to define factory for
+     * @param callable $factory a callable which returns new instance if called
+     *                          callable will receive two arguments:
+     *                          $container - this container
+     *                          $id - ID that was called to create
+     */
+    public function bind(string $id, callable $factory): void
+    {
+        $this->factories[$id] = new CallableFactory($factory);
+    }
+
+    public function factory(string $id): callable
+    {
+        if (isset($this->factories[$id])) {
+            return $this->factories[$id];
+        }
+
+        return $this->factories[$id] = new ClassnameFactory($id);
     }
 
     /**
@@ -37,12 +73,15 @@ class ServiceContainer implements ContainerInterface
      * @template T
      * @param class-string<T> $id Identifier of the entry to look for.
      *
+     * @return mixed Entry.
+     *
      * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
      * @throws ContainerExceptionInterface Error while retrieving the entry.
      *
      * @return T
      */
-    public function get($id) {
+    public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint
+    {
         if (isset($this->instances[$id])) {
             return $this->instances[$id]; // try load a singleton if saved
         }
@@ -62,60 +101,37 @@ class ServiceContainer implements ContainerInterface
      * It does however mean that `get($id)` will not throw a `NotFoundExceptionInterface`.
      *
      * @param string $id Identifier of the entry to look for.
-     *
-     * @return bool
      */
-    public function has($id): bool {
-        try {
-            $this->get($id); // attempt create a service
-        } catch (ServiceNotFoundException $e) {
-            return false;
+    public function has($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingAnyTypeHint,Generic.Files.LineLength.TooLong
+    {
+        // is existing singleton
+        if (isset($this->instances[$id])) {
+            return true;
         }
 
-        return true;
+        // a factory exists
+        if (isset($this->factories[$id])) {
+            return true;
+        }
+
+        // try build a factory
+        try {
+            $this->factory($id);
+
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     /**
-     * Sets an alias for a dependency, it's useful for binding implementations
-     * to a interface. Container will resolve alias as late as possible.
+     * Returns saved singleton or NULL
      *
-     * Example:
-     * <code>
-     * interface Logger {}
-     * class FileLogger implements Logger {}
-     * class Service { function __construct(Logger $logger) {} }
-     *
-     * $container->alias(Logger::class, FileLogger::class);
-     * $service = $container->get(Service::class);
-     * </code>
-     *
-     * @param string $alias an ID for aliased dependency
-     * @param string $id    an ID of instance which will be alias resolve with
-     *
-     * @return void
+     * @return mixed|null
      */
-    public function alias(string $alias, string $id): void
+    public function singleton(string $id)
     {
-        $this->factories[$alias] = self::buildAliasFactory($id);
-    }
-
-    /**
-     * Bind a factory to an instance, it's useful for resolving complex dependencies
-     * where manually (eg. database connection)
-     *
-     *
-     *
-     * @param string   $id      ID of entry we want to define factory for
-     * @param callable $factory a callable which returns new instance if called
-     *                          callable will receive two arguments:
-     *                          $container - this container
-     *                          $id - ID that was called to create
-     *
-     * @return void
-     */
-    public function bind(string $id, callable $factory): void
-    {
-        $this->factories[$id] = self::buildWrapFactory($factory);
+        return $this->instances[$id] ?? null;
     }
 
     /**
@@ -128,50 +144,13 @@ class ServiceContainer implements ContainerInterface
      */
     public function make(string $id)
     {
-        try {
-            if (!isset($this->factories[$id])) {
-                try {
-                    // first try create instance naively
-                    $instance = ($this->factories[$id] = static::buildSimpleFactory($id))();
-                } catch (\ArgumentCountError|\Error $error) {
-                    unset($this->factories[$id]);
-                    $this->factories[$id] = $this->factoryBuilder->buildFactory($id);
-                }
-            }
+        $instance = $this->factory($id)($this);
 
-            $instance = $instance ?? $this->factories[$id]($this);
-
-            if (null === $instance) {
-                throw new EmptyResultFromFactoryException($id);
-            }
-        } catch (\Throwable $error) {
-            $this->handleError($id, $error);
+        if ($instance === null) {
+            throw new EmptyResultFromFactory($id);
         }
 
         return $instance;
-    }
-
-    /**
-     * Resolve dependencies by container, or with given arguments
-     *
-     * @param callable $callable a callable to resolve
-     * @param array    $args     associative array of optional arguments
-     *
-     * @return mixed a result of given callable
-     */
-    public function resolve(callable $callable, array $args = [])
-    {
-        foreach (self::resolveIds($callable, $args) as [$id, $optional, $name]) {
-            if (array_key_exists($name, $args)) {
-                $params[] = $args[$name];
-            } elseif ($optional) {
-                break;
-            } else {
-                $params[] = $this->get($id);
-            }
-        }
-
-        return $params ?? [];
     }
 
     /**
@@ -179,8 +158,6 @@ class ServiceContainer implements ContainerInterface
      *
      * @param string $id    ID of entry
      * @param mixed  $entry actual entry
-     *
-     * @return void
      */
     public function set(string $id, $entry): void
     {
@@ -188,145 +165,22 @@ class ServiceContainer implements ContainerInterface
     }
 
     /**
-     * Unset a singleton with given ID, returns TRUE if singleton was set, FALSE otherwise
+     * Unset a singleton with given ID, returns the singleton if existed or a NULL if didn't
      *
      * @param string $id ID of singleton to unset
      *
-     * @return bool
+     * @return mixed|null
      */
-    public function unset(string $id): bool {
-        if (array_key_exists($id, $this->instances)) {
-            unset($this->instances[$id]);
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Handles an error when making a service
-     *
-     * @param string     $id    ID of entry we're creating
-     * @param \Throwable $error en error
-     *
-     * @return void
-     */
-    private function handleError(string $id, \Throwable $error): void {
-        if ($error instanceof NotFoundExceptionInterface) {
-            throw $error;
-        }
-
-        if ($error instanceof ContainerExceptionInterface) {
-            throw $error;
-        }
-
-        if ($error instanceof \ReflectionException) {
-            throw new ReflectionError($error);
-        }
-
-        if (\sprintf("Class '%s' not found", $id) === $error->getMessage()) {
-            throw new ServiceNotFoundException($id, $error);
-        }
-
-        throw $error;
-    }
-
-    private static function buildFactory($classname)
+    public function unset(string $id)
     {
-        try {
-            $class = new \ReflectionClass($classname);
-        } catch (\ReflectionException $e) {
-            throw new ServiceNotFoundException($classname, $e);
-        }
+        if (isset($this->instances[$id])) {
+            $instance = $this->instances[$id];
 
-        if ($class->isInterface()) {
-            throw new CannotAutowireInterfaceException($classname);
-        }
-
-        $constructor = $class->getConstructor();
-        $constructor->setAccessible(true);
-
-        $ids = [];
-        foreach ($constructor->getParameters() as $param) {
-            if (($id = $param->getClass()) === null) {
-                throw new UnsupportedAutowireParamException($param);
-            }
-
-            $ids[] = $id->getName();
-        }
-
-        return static function ($container) use ($class, $constructor, $ids) {
-            $args = [];
-            foreach ($ids as $id) {
-                $args[] = $container->get($id);
-            }
-
-            $instance = $class->newInstanceWithoutConstructor();
-            $constructor->invokeArgs($instance, $args);
+            unset($this->instances[$id]);
 
             return $instance;
-        };
-    }
-
-    private static function buildSimpleFactory($classname)
-    {
-        return static function () use ($classname) {
-            return new $classname;
-        };
-    }
-
-    private static function buildAliasFactory(string $id) {
-        return static function ($container) use ($id) {
-            return $container->get($id);
-        };
-    }
-
-    private static function buildWrapFactory(callable $factory): callable
-    {
-        $ids = self::resolveIds($factory);
-
-        return static function ($container) use ($factory, $ids) {
-            $params = [];
-
-            foreach ($ids as [$id, $optional]) {
-                if ($optional) {
-                    break;
-                }
-
-                $params[] = $container->get($id);
-            }
-
-            return $factory(...$params);
-        };
-    }
-
-    private static function resolveIds(callable $callable, array $args = []) : array
-    {
-        if ($callable instanceof \Closure || (is_string($callable) && function_exists($callable))) {
-            $reflection = new \ReflectionFunction($callable);
-        } elseif (is_string($callable)) {
-            $reflection = new \ReflectionMethod($callable);
-        } elseif (is_object($callable) && ($reflection = new \ReflectionObject($callable))->hasMethod('__invoke')) {
-            $reflection = $reflection->getMethod('__invoke');
-        } else {
-            $reflection = new \ReflectionMethod(...$callable);
         }
 
-        $ids = [];
-
-        foreach ($reflection->getParameters() as $param) {
-            $name     = $param->getName();
-            $optional = $param->isOptional();
-            $type     = $param->getType();
-
-            if ($type && (! $type->isBuiltin() || $optional || array_key_exists($name, $args))) {
-                $ids[] = [(string) $type, $optional, $param->getName()];
-                continue;
-            }
-
-            throw new UnsupportedAutowireParamException($param);
-        }
-
-        return $ids;
+        return null;
     }
 }

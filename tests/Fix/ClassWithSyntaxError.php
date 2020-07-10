@@ -1,6 +1,6 @@
 <?php // phpcs:disable
 
-namespace IW;
+namespace IW\Fix;
 
 class ClassWithSyntaxError
 {

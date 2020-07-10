@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace IW\ServiceContainer;
 
-class EmptyResultFromFactoryException extends Exception
+class EmptyResultFromFactory extends Exception
 {
     public function __construct(string $id)
     {

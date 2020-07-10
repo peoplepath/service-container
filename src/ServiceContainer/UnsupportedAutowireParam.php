@@ -6,7 +6,7 @@ namespace IW\ServiceContainer;
 
 use ReflectionParameter;
 
-final class UnsupportedAutowireParamException extends Exception
+final class UnsupportedAutowireParam extends Exception
 {
     public function __construct(ReflectionParameter $reflectionParam)
     {
