@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace IW;
 
-use IW\ServiceContainer\AliasFactory;
-use IW\ServiceContainer\CallableFactory;
-use IW\ServiceContainer\ClassnameFactory;
 use IW\ServiceContainer\EmptyResultFromFactory;
+use IW\ServiceContainer\FactoryContainer;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -15,11 +13,16 @@ use Throwable;
 
 class ServiceContainer implements ContainerInterface
 {
-    /** @var callable[] */
-    private $factories = [];
+    /** @var FactoryContainer */
+    private $factories;
 
     /** @var mixed[] */
     private $instances = [];
+
+    public function __construct()
+    {
+        $this->factories = new FactoryContainer();
+    }
 
     /**
      * Sets an alias for a dependency, it's useful for binding implementations
@@ -40,7 +43,7 @@ class ServiceContainer implements ContainerInterface
      */
     public function alias(string $alias, string $id): void
     {
-        $this->factories[$alias] = new AliasFactory($id);
+        $this->factories->alias($alias, $id);
     }
 
     /**
@@ -55,32 +58,27 @@ class ServiceContainer implements ContainerInterface
      */
     public function bind(string $id, callable $factory): void
     {
-        $this->factories[$id] = new CallableFactory($factory);
+        $this->factories->bind($id, $factory);
     }
 
     public function factory(string $id): callable
     {
-        if (isset($this->factories[$id])) {
-            return $this->factories[$id];
-        }
-
-        return $this->factories[$id] = new ClassnameFactory($id);
+        return $this->factories->get($id);
     }
 
     /**
      * Finds an entry of the container by its identifier and returns it.
      *
-     * @template T
      * @param class-string<T> $id Identifier of the entry to look for.
      *
-     * @return mixed Entry.
+     * @return T
      *
      * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
      * @throws ContainerExceptionInterface Error while retrieving the entry.
      *
-     * @return T
+     * @template T
      */
-    public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint
+    public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         if (isset($this->instances[$id])) {
             return $this->instances[$id]; // try load a singleton if saved
@@ -110,7 +108,7 @@ class ServiceContainer implements ContainerInterface
         }
 
         // a factory exists
-        if (isset($this->factories[$id])) {
+        if ($this->factories->has($id)) {
             return true;
         }
 
@@ -137,12 +135,13 @@ class ServiceContainer implements ContainerInterface
     /**
      * Makes a new instance of a service. Dependencies are resolved from the container.
      *
-     * @template T
      * @param class-string<T> $id ID of entry we want to create new instance of
      *
      * @return T
+     *
+     * @template T
      */
-    public function make(string $id)
+    public function make(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         $instance = $this->factory($id)($this);
 
