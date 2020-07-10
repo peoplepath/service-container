@@ -109,7 +109,7 @@ class ServiceContainerTest extends TestCase
      */
     public function testHasMethod(string $id, bool $has): void
     {
-        $container = $this->createTestProxy(ServiceContainer::class, ['make']);
+        $container = $this->createPartialMock(ServiceContainer::class, ['make']);
         $container->expects($this->never())->method('make');
 
         if ($has) {
@@ -131,7 +131,7 @@ class ServiceContainerTest extends TestCase
 
     public function testHasAFactory(): void
     {
-        $container = $this->createTestProxy(ServiceContainer::class, ['make', 'factory']);
+        $container = $this->createPartialMock(ServiceContainer::class, ['make', 'factory']);
         $container->expects($this->never())->method('make');
         $container->expects($this->never())->method('factory');
 
