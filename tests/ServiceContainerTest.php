@@ -184,7 +184,7 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> int $userId ]');
+        $this->expectExceptionMessageMatches('/Unsupported type hint for param: Parameter #0 \[ <required> int(eger)? \$userId \]/');
         $container->get('IW\Fix\ClassWithUnsupportedParam');
     }
 

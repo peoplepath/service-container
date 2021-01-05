@@ -54,9 +54,9 @@ trait ArgumentBuilder
         $ids = [];
 
         foreach ($this->getParams() as $param) {
-            $class = $param->getClass();
+            $type = $param->getType();
 
-            if ($class === null) {
+            if ($type === null || $type->isBuiltin()) {
                 if ($param->isOptional()) {
                     break;
                 }
@@ -64,7 +64,7 @@ trait ArgumentBuilder
                 throw new UnsupportedAutowireParam($param);
             }
 
-            $ids[] = [$class->getName(), $param->isOptional()];
+            $ids[] = [$type->getName(), $param->isOptional()];
         }
 
         return $ids;

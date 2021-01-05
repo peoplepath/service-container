@@ -43,7 +43,7 @@ class CallableFactory implements ServiceFactory
         return $factory(...$args);
     }
 
-    public function __sleep(): void
+    public function __sleep() // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint
     {
         throw new SerializationFail('CallableFactory cannot be serialized');
     }
