@@ -79,7 +79,7 @@ class ServiceContainer implements ContainerInterface
      *
      * @template T
      */
-    public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
+    public function get(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         if (isset($this->instances[$id])) {
             return $this->instances[$id]; // try load a singleton if saved
@@ -101,7 +101,7 @@ class ServiceContainer implements ContainerInterface
      *
      * @param string $id Identifier of the entry to look for.
      */
-    public function has($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingAnyTypeHint,Generic.Files.LineLength.TooLong
+    public function has(string $id): bool
     {
         // is existing singleton
         if (isset($this->instances[$id])) {
@@ -128,7 +128,7 @@ class ServiceContainer implements ContainerInterface
      *
      * @return mixed|null
      */
-    public function singleton(string $id)
+    public function singleton(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         return $this->instances[$id] ?? null;
     }
@@ -159,7 +159,7 @@ class ServiceContainer implements ContainerInterface
      * @param string $id    ID of entry
      * @param mixed  $entry actual entry
      */
-    public function set(string $id, $entry): void
+    public function set(string $id, $entry): void // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         $this->instances[$id] = $entry;
     }
@@ -171,7 +171,7 @@ class ServiceContainer implements ContainerInterface
      *
      * @return mixed|null
      */
-    public function unset(string $id)
+    public function unset(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         if (isset($this->instances[$id])) {
             $instance = $this->instances[$id];
