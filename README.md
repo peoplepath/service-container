@@ -143,7 +143,7 @@ class OrderInvoker
 // wiring factory
 $container->wire('OrderInvoker', 'ReserveItems', 'SendInvoice');
 
-// using annotations (TBD PHP 8.0), used as a fallback (can be overriden by defining factory directly (eg. in tests)
+// using annotations (TBD PHP 8.0), used as a fallback (can be overridden by defining factory directly (eg. in tests)
 class OrderInvoker
 {
   #[IW\ServiceContainer\Bind('create')]
