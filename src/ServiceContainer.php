@@ -8,6 +8,7 @@ use IW\ServiceContainer\AliasFactory;
 use IW\ServiceContainer\CallableFactory;
 use IW\ServiceContainer\ClassnameFactory;
 use IW\ServiceContainer\EmptyResultFromFactory;
+use IW\ServiceContainer\WireFactory;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
@@ -182,5 +183,10 @@ class ServiceContainer implements ContainerInterface
         }
 
         return null;
+    }
+
+    public function wire(string $id, string ...$dependencies): void
+    {
+        $this->factories[$id] = new WireFactory($id, ...$dependencies);
     }
 }

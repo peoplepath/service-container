@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+// phpcs:disable Generic.Files.LineLength.TooLong
+
 namespace IW;
 
 use IW\Fix\First;
@@ -240,5 +242,27 @@ class ServiceContainerTest extends TestCase
             $this->assertInstanceOf('Exception', $e->getPrevious()->getPrevious());
             $this->assertSame('blah blah', $e->getPrevious()->getPrevious()->getMessage());
         }
+    }
+
+    public function testManualWiring(): void
+    {
+        $container = new ServiceContainer();
+
+        $container->wire('IW\Fix\ClassWithVariadicConstructor', 'IW\Fix\Zero');
+
+        $this->assertInstanceOf(
+            'IW\Fix\ClassWithVariadicConstructor',
+            $container->get('IW\Fix\ClassWithVariadicConstructor'),
+        );
+    }
+
+    public function testManualWiringFail(): void
+    {
+        $container = new ServiceContainer();
+
+        $container->wire('IW\Fix\ClassWithVariadicConstructor', 'IW\Fix\Zero', 'IW\Fix\First', 'IW\Fix\Second');
+
+        $this->expectExceptionMessage('IW\Fix\ClassWithVariadicConstructor::__construct(): Argument #2 must be of type IW\Fix\Alias, IW\Fix\First given');
+        $container->get('IW\Fix\ClassWithVariadicConstructor');
     }
 }
