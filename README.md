@@ -26,16 +26,16 @@ namespace Acme\Cache;
 
 class Client {
   private $adapter;
-  
+
   function __construct(MemoryAdapter $adapter) {
     $this->adapter = $adapter;
   }
-  
+
   function get(string $key) {
     $string = $this->adapter->get($key);
     return unserialize($string);
   }
-  
+
   function set(string $key, $value): void {
     $string = serialize($value);
     $this->adapter->set($key, $string);
@@ -66,17 +66,17 @@ namespace Acme\Cache;
 
 class Client {
   private $adapter;
-  
+
   function __construct(MemoryAdapter $adapter, PhpSerializer $serializer) {
     $this->adapter = $adapter;
     $this->serializer = $serializer;
   }
-  
+
   function get(string $key) {
     $string = $this->adapter->get($key);
     return $this->serializer->unserialize($string);
   }
-  
+
   function set(string $key, $value): void {
     $string = $this->serializer->serialize($value);
     $this->adapter->set($key, $string);
@@ -102,6 +102,56 @@ class Child extends Parent {
   }
 }
 ```
+
+#### Manual Wiring
+Sometimes you want to configure container manually. Let's consider following example on _Command Pattern_
+```php
+interface OrderCommand
+{
+  function execute();
+}
+
+class OrderInvoker
+{
+  function __construct(private OrderCommand ...$commands) {}
+
+  function execute() : void {
+    array_walk($this->commands, fn($command) => $command->execute());
+  }
+}
+```
+With `IW\ServiceContainer` you have several options how to resolve `OrderInvoker`'s dependencies.
+```php
+// an alias but that's no good for multiple commands
+$container->alias('OrderInvoker', 'ReserveItems');
+
+// external factory
+$container->bind('OrderInvoker', function (IW\ServiceContainer $container) {
+  return new OrderInvoker($container->get('ReserveItems'), $container->get('SendInvoice'));
+});
+
+// internal factory
+class OrderInvoker
+{
+  static function create(ReserveItems $reserveItems, SendInvoice $sendInvoice) : OrderInvoker {
+    return new OrderInvoker($reserveItems, $sendInvoice);
+  }
+}
+
+// wiring factory
+$container->wire('OrderInvoker', 'ReserveItems', 'SendInvoice');
+
+// using annotations (TBD PHP 8.0)
+
+class OrderInvoker
+{
+  #[IW\ServiceContainer\Wire('ReserveItems', 'SendInvoice')]
+  function __construct(private OrderCommand ...$commands) {}
+}
+```
+Arguably all approaches have their advantages. _internal factory_ approach is
+good for static analysis. _wiring factory_ is useful for common application pattern
+and when dependencies may vary.
 
 **TODO** keep going with examples
 
