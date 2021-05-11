@@ -131,6 +131,8 @@ $container->bind('OrderInvoker', function (IW\ServiceContainer $container) {
 });
 
 // internal factory
+$container->bind('OrderInvoker', 'OrderInvoker::create');
+
 class OrderInvoker
 {
   static function create(ReserveItems $reserveItems, SendInvoice $sendInvoice) : OrderInvoker {
@@ -141,12 +143,15 @@ class OrderInvoker
 // wiring factory
 $container->wire('OrderInvoker', 'ReserveItems', 'SendInvoice');
 
-// using annotations (TBD PHP 8.0)
-
+// using annotations (TBD PHP 8.0), used as a fallback (can be overriden by defining factory directly (eg. in tests)
 class OrderInvoker
 {
-  #[IW\ServiceContainer\Wire('ReserveItems', 'SendInvoice')]
+  #[IW\ServiceContainer\Bind('create')]
   function __construct(private OrderCommand ...$commands) {}
+
+  static function create(ReserveItems $reserveItems, SendInvoice $sendInvoice) : OrderInvoker {
+    return new OrderInvoker($reserveItems, $sendInvoice);
+  } 
 }
 ```
 Arguably all approaches have their advantages. _internal factory_ approach is
