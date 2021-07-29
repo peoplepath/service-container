@@ -31,8 +31,10 @@ class CallableFactory implements ServiceFactory
 
     /**
      * Method will create new instance of a service on call
+     *
+     * @return mixed
      */
-    public function __invoke(ServiceContainer $container): mixed
+    public function __invoke(ServiceContainer $container)
     {
         $args = $this->buildArgs($this->ids, $container);
 

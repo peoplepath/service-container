@@ -3,7 +3,7 @@
     "description": "Lightweight yet powerful implementation of dependancy injection container with autowiring",
     "license": "MIT",
     "require": {
-        "php": "^7.2||^8.0",
+        "php": ">=7.2",
         "psr/container": "^2.0"
     },
     "require-dev": {

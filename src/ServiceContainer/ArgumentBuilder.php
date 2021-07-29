@@ -20,12 +20,12 @@ trait ArgumentBuilder
     {
         $args = [];
 
-        foreach ($ids as [$id, $isOptional]) {
+        foreach ($ids as [$id, $isOptional, $default]) {
             if ($isOptional) {
-                $arg = $container->singleton($id);
+                $arg = $container->instance($id);
 
                 if ($arg === null) {
-                    break;
+                    $arg = $default;
                 }
             } else {
                 $arg = $container->get($id);
@@ -64,7 +64,7 @@ trait ArgumentBuilder
                 throw new UnsupportedAutowireParam($param);
             }
 
-            $ids[] = [$type->getName(), $param->isOptional()];
+            $ids[] = [$type->getName(), $param->isOptional(), $param->isOptional() ? $param->getDefaultValue() : null];
         }
 
         return $ids;

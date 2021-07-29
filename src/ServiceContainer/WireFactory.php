@@ -23,7 +23,7 @@ final class WireFactory implements ServiceFactory
     /**
      * Method will create new instance of a service on call
      */
-    public function __invoke(ServiceContainer $container): mixed
+    public function __invoke(ServiceContainer $container): object
     {
         $classname    = $this->classname;
         $dependencies = array_map(

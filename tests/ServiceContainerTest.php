@@ -14,6 +14,9 @@ use stdClass;
 
 use function random_bytes;
 use function uniqid;
+use function version_compare;
+
+use const PHP_VERSION;
 
 class ServiceContainerTest extends TestCase
 {
@@ -222,13 +225,13 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('IW\Fix\First', $container->get('get_me_a_foo'));
     }
 
-    public function testObtainingSingleton(): void
+    public function testObtainingInstance(): void
     {
         $container = new ServiceContainer();
 
-        $this->assertNull($container->singleton('IW\Fix\First'));
+        $this->assertNull($container->instance('IW\Fix\First'));
         $container->get('IW\Fix\First');
-        $this->assertInstanceOf('IW\Fix\First', $container->singleton('IW\Fix\First'));
+        $this->assertInstanceOf('IW\Fix\First', $container->instance('IW\Fix\First'));
     }
 
     public function testDepencyOnBrokenClass(): void
@@ -262,7 +265,37 @@ class ServiceContainerTest extends TestCase
 
         $container->wire('IW\Fix\ClassWithVariadicConstructor', 'IW\Fix\Zero', 'IW\Fix\First', 'IW\Fix\Second');
 
-        $this->expectExceptionMessage('IW\Fix\ClassWithVariadicConstructor::__construct(): Argument #2 must be of type IW\Fix\Alias, IW\Fix\First given');
+        if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
+            $this->expectExceptionMessage('IW\Fix\ClassWithVariadicConstructor::__construct(): Argument #2 must be of type IW\Fix\Alias, IW\Fix\First given');
+        } else {
+            $this->expectExceptionMessage('Argument 2 passed to IW\Fix\ClassWithVariadicConstructor::__construct() must implement interface IW\Fix\Alias, instance of IW\Fix\First given');
+        }
+
+        $this->expectException('TypeError');
         $container->get('IW\Fix\ClassWithVariadicConstructor');
+    }
+
+    public function testOptionalParams(): void
+    {
+        $container = new ServiceContainer();
+
+        $instance = $container->make('IW\Fix\ClassWithOptionalParams');
+        $this->assertNull($instance->fourth);
+        $this->assertSame('default string', $instance->string);
+        $this->assertSame([], $instance->options);
+
+        $container->set('IW\Fix\Fourth', $container->make('IW\Fix\Fourth'));
+
+        $instance = $container->make('IW\Fix\ClassWithOptionalParams');
+        $this->assertInstanceOf('IW\Fix\Fourth', $instance->fourth);
+        $this->assertSame('default string', $instance->string);
+        $this->assertSame([], $instance->options);
+
+        $container->unset('IW\Fix\Fourth');
+
+        $instance = $container->make('IW\Fix\ClassWithOptionalParams');
+        $this->assertNull($instance->fourth);
+        $this->assertSame('default string', $instance->string);
+        $this->assertSame([], $instance->options);
     }
 }

@@ -125,11 +125,11 @@ class ServiceContainer implements ContainerInterface
     }
 
     /**
-     * Returns saved singleton or NULL
+     * Returns saved instance or NULL
      *
      * @return mixed|null
      */
-    public function singleton(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
+    public function instance(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         return $this->instances[$id] ?? null;
     }
