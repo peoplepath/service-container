@@ -8,9 +8,12 @@ class ClassWithOptionalParams
 {
     public ?Fourth $fourth;
     public string $string;
+
+    /** @var mixed|mixed[] */
     public $options;
 
-    public function __construct(?Fourth $fourth = null, string $string='default string', $options=[])
+    // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint
+    public function __construct(?Fourth $fourth = null, string $string = 'default string', $options = [])
     {
         $this->fourth  = $fourth;
         $this->string  = $string;
