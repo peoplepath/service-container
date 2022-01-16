@@ -80,7 +80,7 @@ class ServiceContainer implements ContainerInterface
      *
      * @template T
      */
-    public function get(string $id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
+    public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         if (isset($this->instances[$id])) {
             return $this->instances[$id]; // try load a singleton if saved
@@ -102,7 +102,7 @@ class ServiceContainer implements ContainerInterface
      *
      * @param string $id Identifier of the entry to look for.
      */
-    public function has(string $id): bool
+    public function has($id): bool // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         // is existing singleton
         if (isset($this->instances[$id])) {
