@@ -53,7 +53,7 @@ class CallableFactory implements ServiceFactory
      *
      * @return ReflectionParameter[]
      */
-    protected function getParams(): array
+    private function getParams(): array
     {
         if (is_string($this->factory)) {
             if (function_exists($this->factory)) {

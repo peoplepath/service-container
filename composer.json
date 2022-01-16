@@ -8,7 +8,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^9.0",
-        "doctrine/coding-standard": "^9.0"
+        "doctrine/coding-standard": "^9.0",
+        "infection/infection": "^0.26.1"
     },
     "autoload": {
         "psr-4": {
@@ -24,5 +25,11 @@
         "bench": [
             "phpbench run --report=aggregate benchmarks/"
         ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "infection/extension-installer": true
+        }
     }
 }

@@ -42,7 +42,7 @@ trait ArgumentBuilder
      *
      * @return ReflectionParameter[]
      */
-    abstract protected function getParams(): array;
+    abstract private function getParams(): array;
 
     /**
      * Returns IDs of dependencies

@@ -11,6 +11,6 @@ abstract class Exception extends \Exception implements ContainerExceptionInterfa
 {
     public function __construct(?string $message = null, ?Throwable $previous = null)
     {
-        parent::__construct($message, 0, $previous);
+        parent::__construct($message, 1, $previous);
     }
 }

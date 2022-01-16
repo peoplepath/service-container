@@ -25,6 +25,7 @@ class ServiceContainerTest extends TestCase
         $container = new ServiceContainer();
 
         $this->expectException('IW\ServiceContainer\ServiceNotFound');
+        $this->expectExceptionCode(1);
         $this->expectExceptionMessage('Service object not found, id: IW\NotExists');
         $container->get('IW\NotExists');
     }
@@ -181,6 +182,8 @@ class ServiceContainerTest extends TestCase
         try {
             $container->get('IW\Fix\WithAlias');
         } catch (BrokenDependency $e) {
+            $this->assertSame('Getting class IW\Fix\WithAlias failed', $e->getMessage());
+
             throw $e->getPrevious();
         }
     }
@@ -241,6 +244,7 @@ class ServiceContainerTest extends TestCase
         try {
             $container->get('IW\Fix\DependsOnClassWithFalseConstructor');
         } catch (BrokenDependency $e) {
+            $this->assertSame('Getting class IW\Fix\DependsOnClassWithFalseConstructor failed', $e->getMessage());
             $this->assertInstanceOf(BrokenConstructor::class, $e->getPrevious());
             $this->assertInstanceOf('Exception', $e->getPrevious()->getPrevious());
             $this->assertSame('blah blah', $e->getPrevious()->getPrevious()->getMessage());

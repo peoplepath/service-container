@@ -63,7 +63,7 @@ class ClassnameFactory implements ServiceFactory
      *
      * @return ReflectionParameter[]
      */
-    protected function getParams(): array
+    private function getParams(): array
     {
         try {
             $class = new ReflectionClass($this->classname);

@@ -13,21 +13,56 @@ use function serialize;
 
 final class CallableFactoryTest extends TestCase
 {
-    public function testCreatingInstance(): void
+    /**
+     * @dataProvider callablesProvider
+     */
+    public function testCreatingInstanceWithClosure(callable $callable): void
     {
-        $container = $this->createMock(ServiceContainer::class);
-        $container->method('get')
-            ->with('IW\Fix\Fourth')
-            ->willReturn(new Fourth());
+        $factory = new CallableFactory($callable);
 
-        $factory = new CallableFactory(static function (Fourth $fourth) {
-            return new Third($fourth);
-        });
-
-        $this->assertInstanceOf('IW\Fix\Third', $factory($container));
+        $this->assertInstanceOf('IW\Fix\Third', $factory(new ServiceContainer()));
 
         $this->expectException('IW\ServiceContainer\SerializationFail');
+        $this->expectExceptionCode(1);
 
         serialize($factory);
+    }
+
+    /**
+     * @return iterable<callable>
+     */
+    public function callablesProvider(): iterable
+    {
+        yield 'closure' => [static fn (Fourth $fourth) => new Third($fourth)];
+        yield 'function' => [__NAMESPACE__ . '\factory_third'];
+        yield 'method' => [[new FactoryThird(), 'makeThird']];
+        yield 'static method' => [__NAMESPACE__ . '\FactoryThird::createThird'];
+        yield 'static method 2' => [[__NAMESPACE__ . '\FactoryThird', 'createThird']];
+        yield 'callable class' => [new FactoryThird()];
+    }
+}
+
+// phpcs:disable
+
+function factory_third(Fourth $fourth): Third
+{
+    return new Third($fourth);
+}
+
+final class FactoryThird
+{
+    public function __invoke(Fourth $fourth): Third
+    {
+        return new Third($fourth);
+    }
+
+    public static function createThird(Fourth $fourth): Third
+    {
+        return new Third($fourth);
+    }
+
+    public function makeThird(Fourth $fourth): Third
+    {
+        return new Third($fourth);
     }
 }
