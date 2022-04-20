@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace IW\ServiceContainer;
 
 use IW\ServiceContainer;
+use ReflectionNamedType;
 use ReflectionParameter;
 
 trait ArgumentBuilder
@@ -42,7 +43,7 @@ trait ArgumentBuilder
      *
      * @return ReflectionParameter[]
      */
-    abstract private function getParams(): array;
+    abstract protected function getParams(): array;
 
     /**
      * Returns IDs of dependencies
@@ -56,15 +57,16 @@ trait ArgumentBuilder
         foreach ($this->getParams() as $param) {
             $type = $param->getType();
 
-            if ($type === null || $type->isBuiltin()) {
-                if ($param->isOptional()) {
-                    break;
-                }
-
-                throw new UnsupportedAutowireParam($param);
+            if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
+                $ids[] = [$type->getName(), $param->isOptional(), $param->isOptional() ? $param->getDefaultValue() : null];
+                continue;
             }
 
-            $ids[] = [$type->getName(), $param->isOptional(), $param->isOptional() ? $param->getDefaultValue() : null];
+            if ($param->isOptional()) {
+                break;
+            }
+
+            throw new UnsupportedAutowireParam($param);
         }
 
         return $ids;

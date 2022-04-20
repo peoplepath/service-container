@@ -302,4 +302,17 @@ class ServiceContainerTest extends TestCase
         $this->assertSame('default string', $instance->string);
         $this->assertSame([], $instance->options);
     }
+
+    /**
+     * @requires PHP >= 8.0
+     */
+    public function testUnionTypes(): void
+    {
+        $container = new ServiceContainer();
+
+        $this->expectException('IW\ServiceContainer\UnsupportedAutowireParam');
+        $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> IW\Fix\First|IW\Fix\Fourth $dependency ]');
+
+        $container->get('IW\Fix\ClassWithUnionType');
+    }
 }
