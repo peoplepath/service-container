@@ -315,4 +315,14 @@ class ServiceContainerTest extends TestCase
 
         $container->get('IW\Fix\ClassWithUnionType');
     }
+
+    public function testNullableParam(): void
+    {
+        $container = new ServiceContainer();
+        $container->set('IW\Fix\First', null);
+        $this->assertTrue($container->has('IW\Fix\First'));
+
+        $instance = $container->make('IW\Fix\ClassWithNullableParam');
+        $this->assertNull($instance->first);
+    }
 }

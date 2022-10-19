@@ -14,6 +14,8 @@ use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Throwable;
 
+use function array_key_exists;
+
 class ServiceContainer implements ContainerInterface
 {
     /** @var callable[] */
@@ -82,7 +84,7 @@ class ServiceContainer implements ContainerInterface
      */
     public function get($id) // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
-        if (isset($this->instances[$id])) {
+        if (array_key_exists($id, $this->instances)) {
             return $this->instances[$id]; // try load a singleton if saved
         }
 
@@ -105,7 +107,7 @@ class ServiceContainer implements ContainerInterface
     public function has($id): bool // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint.MissingNativeTypeHint,SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint,Generic.Files.LineLength.TooLong
     {
         // is existing singleton
-        if (isset($this->instances[$id])) {
+        if (array_key_exists($id, $this->instances)) {
             return true;
         }
 
