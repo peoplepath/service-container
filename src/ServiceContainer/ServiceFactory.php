@@ -10,8 +10,6 @@ interface ServiceFactory
 {
     /**
      * Method will create new instance of a service on call
-     *
-     * @return mixed
      */
-    public function __invoke(ServiceContainer $container);
+    public function __invoke(ServiceContainer $container): mixed;
 }

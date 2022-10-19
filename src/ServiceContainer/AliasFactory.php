@@ -18,10 +18,8 @@ class AliasFactory implements ServiceFactory
 
     /**
      * Creates instance of simple class with no parameters
-     *
-     * @return mixed
      */
-    public function __invoke(ServiceContainer $container)
+    public function __invoke(ServiceContainer $container): mixed
     {
         return $container->get($this->classname);
     }

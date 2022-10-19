@@ -12,11 +12,9 @@ final class WireFactory implements ServiceFactory
 {
     /** @var string[] $dependencies */
     private array $dependencies;
-    private string $classname;
 
-    public function __construct(string $classname, string ...$dependencies)
+    public function __construct(private string $classname, string ...$dependencies)
     {
-        $this->classname    = $classname;
         $this->dependencies = $dependencies;
     }
 

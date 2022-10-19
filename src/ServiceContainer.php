@@ -121,7 +121,7 @@ class ServiceContainer implements ContainerInterface
             $this->factory($id);
 
             return true;
-        } catch (Throwable $e) {
+        } catch (Throwable) {
             return false;
         }
     }

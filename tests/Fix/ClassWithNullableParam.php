@@ -6,10 +6,7 @@ namespace IW\Fix;
 
 class ClassWithNullableParam
 {
-    public ?First $first;
-
-    public function __construct(?First $first)
+    public function __construct(public First|null $first)
     {
-        $this->first = $first;
     }
 }

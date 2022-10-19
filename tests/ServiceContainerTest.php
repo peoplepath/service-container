@@ -303,9 +303,7 @@ class ServiceContainerTest extends TestCase
         $this->assertSame([], $instance->options);
     }
 
-    /**
-     * @requires PHP >= 8.0
-     */
+    /** @requires PHP >= 8.0 */
     public function testUnionTypes(): void
     {
         $container = new ServiceContainer();

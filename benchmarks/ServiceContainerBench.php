@@ -7,9 +7,7 @@ namespace IW;
 use function array_pop;
 use function sprintf;
 
-/**
- * @BeforeMethods({"init"})
- */
+/** @BeforeMethods({"init"}) */
 class ServiceContainerBench
 {
     /** @var ServiceContainer */

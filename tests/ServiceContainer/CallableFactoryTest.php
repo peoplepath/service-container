@@ -13,9 +13,7 @@ use function serialize;
 
 final class CallableFactoryTest extends TestCase
 {
-    /**
-     * @dataProvider callablesProvider
-     */
+    /** @dataProvider callablesProvider */
     public function testCreatingInstanceWithClosure(callable $callable): void
     {
         $factory = new CallableFactory($callable);
@@ -28,9 +26,7 @@ final class CallableFactoryTest extends TestCase
         serialize($factory);
     }
 
-    /**
-     * @return iterable<callable>
-     */
+    /** @return iterable<callable> */
     public function callablesProvider(): iterable
     {
         yield 'closure' => [static fn (Fourth $fourth) => new Third($fourth)];

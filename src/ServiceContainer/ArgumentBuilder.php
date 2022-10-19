@@ -57,8 +57,12 @@ trait ArgumentBuilder
         foreach ($this->getParams() as $param) {
             $type = $param->getType();
 
-            if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
-                $ids[] = [$type->getName(), $param->isOptional(), $param->isOptional() ? $param->getDefaultValue() : null];
+            if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
+                $ids[] = [
+                    $type->getName(),
+                    $param->isOptional(),
+                    $param->isOptional() ? $param->getDefaultValue() : null,
+                ];
                 continue;
             }
 
