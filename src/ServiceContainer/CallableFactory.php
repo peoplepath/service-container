@@ -7,11 +7,6 @@ namespace IW\ServiceContainer;
 use Closure;
 use IW\ServiceContainer;
 use ReflectionFunction;
-use ReflectionMethod;
-
-use function function_exists;
-use function is_object;
-use function is_string;
 
 class CallableFactory implements ServiceFactory
 {
@@ -53,19 +48,7 @@ class CallableFactory implements ServiceFactory
      */
     private function getParams(): array
     {
-        if (is_string($this->factory)) {
-            if (function_exists($this->factory)) {
-                $reflection = new ReflectionFunction($this->factory);
-            } else {
-                $reflection = new ReflectionMethod($this->factory);
-            }
-        } elseif ($this->factory instanceof Closure) {
-            $reflection = new ReflectionFunction($this->factory);
-        } elseif (is_object($this->factory)) {
-            $reflection = new ReflectionMethod($this->factory, '__invoke');
-        } else {
-            $reflection = new ReflectionMethod(...$this->factory);
-        }
+        $reflection = new ReflectionFunction(Closure::fromCallable($this->factory));
 
         return $reflection->getParameters();
     }
