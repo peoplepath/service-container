@@ -9,7 +9,8 @@
     "require-dev": {
         "phpunit/phpunit": "^9.0",
         "doctrine/coding-standard": "^10.0",
-        "infection/infection": "^0.26.16"
+        "infection/infection": "^0.26.16",
+        "phpbench/phpbench": "^1.2"
     },
     "autoload": {
         "psr-4": {

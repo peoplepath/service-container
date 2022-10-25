@@ -3,7 +3,6 @@
     <arg value="ps"/>
     <arg name="colors"/>
 
-    <file>benchmarks</file>
     <file>src</file>
     <file>tests</file>
 
