@@ -8,12 +8,9 @@ use IW\ServiceContainer;
 
 class AliasFactory implements ServiceFactory
 {
-    /** @var string */
-    private $classname;
-
-    public function __construct(string $classname)
+    /** @param class-string $classname */
+    public function __construct(private string $classname)
     {
-        $this->classname = $classname;
     }
 
     /**

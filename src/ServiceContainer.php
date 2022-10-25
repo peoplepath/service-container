@@ -19,10 +19,10 @@ use function array_key_exists;
 class ServiceContainer implements ContainerInterface
 {
     /** @var callable[] */
-    private $factories = [];
+    private array $factories = [];
 
     /** @var mixed[] */
-    private $instances = [];
+    private array $instances = [];
 
     /**
      * Sets an alias for a dependency, it's useful for binding implementations
@@ -38,8 +38,8 @@ class ServiceContainer implements ContainerInterface
      * $service = $container->get(Service::class);
      * </code>
      *
-     * @param string $alias an ID for aliased dependency
-     * @param string $id    an ID of instance which will be alias resolve with
+     * @param class-string $alias an ID for aliased dependency
+     * @param class-string $id    an ID of instance which will be alias resolve with
      */
     public function alias(string $alias, string $id): void
     {
@@ -61,6 +61,7 @@ class ServiceContainer implements ContainerInterface
         $this->factories[$id] = new CallableFactory($factory);
     }
 
+    /** @param class-string $id */
     public function factory(string $id): callable
     {
         if (isset($this->factories[$id])) {
@@ -75,14 +76,14 @@ class ServiceContainer implements ContainerInterface
      *
      * @param class-string<T> $id Identifier of the entry to look for.
      *
-     * @return T
+     * @return T|ServiceContainer
      *
      * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
      * @throws ContainerExceptionInterface Error while retrieving the entry.
      *
      * @template T
      */
-    public function get($id)
+    public function get(string $id)
     {
         if (array_key_exists($id, $this->instances)) {
             return $this->instances[$id]; // try load a singleton if saved
@@ -102,7 +103,7 @@ class ServiceContainer implements ContainerInterface
      * `has($id)` returning true does not mean that `get($id)` will not throw an exception.
      * It does however mean that `get($id)` will not throw a `NotFoundExceptionInterface`.
      *
-     * @param string $id Identifier of the entry to look for.
+     * @param class-string $id Identifier of the entry to look for.
      */
     public function has(string $id): bool
     {

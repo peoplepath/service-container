@@ -13,9 +13,11 @@ trait ArgumentBuilder
     /**
      * Returns arguments for a method/constructor
      *
-     * @param string[] $ids
+     * @param array<int, array{class-string<T>, bool, mixed}> $ids
      *
-     * @return mixed[]
+     * @return T[]
+     *
+     * @template T
      */
     final protected function buildArgs(array $ids, ServiceContainer $container): array
     {
@@ -48,7 +50,7 @@ trait ArgumentBuilder
     /**
      * Returns IDs of dependencies
      *
-     * @return string[]
+     * @return array<int, array{class-string, bool, mixed}>
      */
     final protected function resolveIds(): array
     {
@@ -58,8 +60,11 @@ trait ArgumentBuilder
             $type = $param->getType();
 
             if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
+                /** @var class-string $classname it's not builtin so it must be classname */
+                $classname = $type->getName();
+
                 $ids[] = [
-                    $type->getName(),
+                    $classname,
                     $param->isOptional(),
                     $param->isOptional() ? $param->getDefaultValue() : null,
                 ];

@@ -15,16 +15,13 @@ class ClassnameFactory implements ServiceFactory
 {
     use ArgumentBuilder;
 
-    /** @var ReflectionMethod|null */
-    private $constructor = null;
+    private ReflectionMethod|null $constructor = null;
 
-    /** @var string */
-    private $classname;
+    /** @var array<int, array{class-string, bool, mixed}> */
+    private array $ids;
 
-    /** @var string[] */
-    private $ids;
-
-    public function __construct(string $classname)
+    /** @param class-string $classname */
+    public function __construct(private string $classname)
     {
         $this->classname = $classname;
         $this->ids       = $this->resolveIds();

@@ -7,6 +7,7 @@ namespace IW\ServiceContainer;
 use Closure;
 use IW\ServiceContainer;
 use ReflectionFunction;
+use ReflectionParameter;
 
 class CallableFactory implements ServiceFactory
 {
@@ -15,8 +16,8 @@ class CallableFactory implements ServiceFactory
     /** @var callable */
     private $factory;
 
-    /** @var string[] */
-    private $ids;
+    /** @var array<int, array{class-string, bool, mixed}> */
+    private array $ids;
 
     public function __construct(callable $factory)
     {
@@ -31,9 +32,7 @@ class CallableFactory implements ServiceFactory
     {
         $args = $this->buildArgs($this->ids, $container);
 
-        $factory = $this->factory;
-
-        return $factory(...$args);
+        return ($this->factory)(...$args);
     }
 
     public function __sleep() // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint

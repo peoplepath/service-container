@@ -21,3 +21,6 @@ jobs:
       
     - name: Run checkstyle
       run: vendor/bin/phpcs
+
+    - name: Run phpstan
+      run: vendor/bin/phpstan analyze

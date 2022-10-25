@@ -10,7 +10,7 @@ use function array_map;
 
 final class WireFactory implements ServiceFactory
 {
-    /** @var string[] $dependencies */
+    /** @var class-string[] $dependencies */
     private array $dependencies;
 
     public function __construct(private string $classname, string ...$dependencies)
