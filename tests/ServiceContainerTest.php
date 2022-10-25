@@ -307,7 +307,17 @@ class ServiceContainerTest extends TestCase
     }
 
     /** @requires PHP >= 8.0 */
-    public function testUnionTypes(): void
+    public function testUnionTypesWiring(): void
+    {
+        $container = new ServiceContainer();
+
+        $container->wire('IW\Fix\ClassWithUnionType', 'IW\Fix\First');
+
+        $this->assertInstanceOf('IW\Fix\ClassWithUnionType', $container->get('IW\Fix\ClassWithUnionType'));
+    }
+
+    /** @requires PHP >= 8.0 */
+    public function testUnionTypesCannotBeAutowired(): void
     {
         $container = new ServiceContainer();
 
@@ -315,6 +325,27 @@ class ServiceContainerTest extends TestCase
         $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> IW\Fix\First|IW\Fix\Fourth $dependency ]');
 
         $container->get('IW\Fix\ClassWithUnionType');
+    }
+
+    /** @requires PHP >= 8.1 */
+    public function testIntersectionTypesWiring(): void
+    {
+        $container = new ServiceContainer();
+
+        $container->wire('IW\Fix\ClassWithIntersectionType', 'IW\Fix\Zero');
+
+        $this->assertInstanceOf('IW\Fix\ClassWithIntersectionType', $container->get('IW\Fix\ClassWithIntersectionType'));
+    }
+
+    /** @requires PHP >= 8.1 */
+    public function testIntersectionTypesCannotBeAutowired(): void
+    {
+        $container = new ServiceContainer();
+
+        $this->expectException('IW\ServiceContainer\UnsupportedAutowireParam');
+        $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> IW\Fix\Alias&IW\Fix\Zero $dependency ]');
+
+        $container->get('IW\Fix\ClassWithIntersectionType');
     }
 
     public function testNullableParam(): void
