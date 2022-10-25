@@ -11,6 +11,7 @@ class ClassWithOptionalParams
         public Fourth|null $fourth = null,
         public string $string = 'default string',
         public $options = [],
+        public Zero|null $zero = null,
     ) {
     }
 }

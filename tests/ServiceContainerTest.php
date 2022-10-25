@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace IW;
 
 use IW\Fix\First;
+use IW\Fix\Fourth;
 use IW\ServiceContainer\BrokenConstructor;
 use IW\ServiceContainer\BrokenDependency;
 use PHPUnit\Framework\TestCase;
@@ -40,6 +41,8 @@ class ServiceContainerTest extends TestCase
         try {
             $container->get('IW\Fix\ClassWithFalseConstructor');
         } catch (BrokenConstructor $e) {
+            $this->assertSame($e->getMessage(), 'Constructor class IW\Fix\ClassWithFalseConstructor failed');
+
             throw $e->getPrevious();
         }
     }
@@ -322,5 +325,16 @@ class ServiceContainerTest extends TestCase
 
         $instance = $container->make('IW\Fix\ClassWithNullableParam');
         $this->assertNull($instance->first);
+    }
+
+    public function testFactory(): void
+    {
+        $container = new ServiceContainer();
+
+        $this->assertInstanceOf('IW\ServiceContainer\ClassnameFactory', $container->factory(Fourth::class));
+
+        $container->bind(Fourth::class, static fn () => new Fourth());
+
+        $this->assertInstanceOf('IW\ServiceContainer\CallableFactory', $container->factory(Fourth::class));
     }
 }
