@@ -112,11 +112,6 @@ class ServiceContainer implements ContainerInterface
             return true;
         }
 
-        // a factory exists
-        if (isset($this->factories[$id])) {
-            return true;
-        }
-
         // try build a factory
         try {
             $this->factory($id);
