@@ -368,4 +368,17 @@ class ServiceContainerTest extends TestCase
 
         $this->assertInstanceOf('IW\ServiceContainer\CallableFactory', $container->factory(Fourth::class));
     }
+
+    public function testTry(): void
+    {
+        $container = new ServiceContainer();
+
+        $this->assertInstanceOf('IW\Fix\First', $container->try('IW\Fix\First'));
+        $this->assertNull($container->try('IW\Fix\ClassWithFalseConstructor', $exception));
+        $this->assertInstanceOf('Psr\Container\ContainerExceptionInterface', $exception);
+        $this->assertInstanceOf('Exception', $exception->getPrevious());
+
+        $this->expectException('ParseError');
+        $this->assertNull($container->try('IW\Fix\ClassWithSyntaxError'));
+    }
 }

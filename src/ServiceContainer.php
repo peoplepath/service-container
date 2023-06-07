@@ -167,6 +167,27 @@ class ServiceContainer implements ContainerInterface
     }
 
     /**
+     * Try to get existing instance or create new, return NULL if instance cannot be created
+     *
+     * @param class-string<T>                  $id        Identifier of the entry to look for.
+     * @param ContainerExceptionInterface|null $exception sets exception if thrown
+     *
+     * @return T|ServiceContainer|null
+     *
+     * @template T
+     */
+    public function try(string $id, ContainerExceptionInterface|null &$exception = null): mixed
+    {
+        try {
+            return $this->get($id);
+        } catch (ContainerExceptionInterface $e) {
+            $exception = $e;
+
+            return null;
+        }
+    }
+
+    /**
      * Unset a singleton with given ID, returns the singleton if existed or a NULL if didn't
      *
      * @param string $id ID of singleton to unset
