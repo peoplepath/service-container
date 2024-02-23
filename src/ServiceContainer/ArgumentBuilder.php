@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace IW\ServiceContainer;
 
 use IW\ServiceContainer;
+use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionParameter;
+use ReflectionUnionType;
 
 trait ArgumentBuilder
 {
@@ -23,7 +25,7 @@ trait ArgumentBuilder
     {
         $args = [];
 
-        foreach ($ids as [$id, $isOptional, $default]) {
+        foreach ($ids as [$id, $isOptional, $default, $dnf]) {
             if ($isOptional) {
                 $arg = $container->instance($id);
 
@@ -31,7 +33,11 @@ trait ArgumentBuilder
                     $arg = $default;
                 }
             } else {
-                $arg = $container->get($id);
+                try {
+                    $arg = $container->get($id);
+                } catch (ServiceNotFound $e) {
+                    $dnf ? throw new CannotAutowireCompositType($id, $e) : throw $e;
+                }
             }
 
             $args[] = $arg;
@@ -67,6 +73,17 @@ trait ArgumentBuilder
                     $classname,
                     $param->isOptional(),
                     $param->isOptional() ? $param->getDefaultValue() : null,
+                    false,
+                ];
+                continue;
+            }
+
+            if (($type instanceof ReflectionUnionType) || ($type instanceof ReflectionIntersectionType)) {
+                $ids[] = [
+                    $type->__toString(),
+                    $param->isOptional(),
+                    $param->isOptional() ? $param->getDefaultValue() : null,
+                    true,
                 ];
                 continue;
             }

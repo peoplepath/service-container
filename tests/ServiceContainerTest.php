@@ -12,6 +12,7 @@ use IW\ServiceContainer\BrokenConstructor;
 use IW\ServiceContainer\BrokenDependency;
 use PHPUnit\Framework\TestCase;
 use stdClass;
+use Throwable;
 
 use function random_bytes;
 use function uniqid;
@@ -105,9 +106,9 @@ class ServiceContainerTest extends TestCase
 
         $this->assertIsObject($service);
         $this->assertInstanceOf('stdClass', $service);
-        $this->assertObjectHasAttribute('foo', $service);
+        $this->assertObjectHasProperty('foo', $service);
         $this->assertInstanceOf('IW\Fix\First', $service->foo);
-        $this->assertObjectHasAttribute('bar', $service);
+        $this->assertObjectHasProperty('bar', $service);
         $this->assertSame($bar, $service->bar);
     }
 
@@ -321,10 +322,13 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $this->expectException('IW\ServiceContainer\UnsupportedAutowireParam');
-        $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> IW\Fix\First|IW\Fix\Fourth $dependency ]');
-
-        $container->get('IW\Fix\ClassWithUnionType');
+        try {
+            $container->get('IW\Fix\ClassWithUnionType');
+        } catch (Throwable $e) {
+            $this->assertInstanceOf('IW\ServiceContainer\BrokenDependency', $e);
+            $this->assertInstanceOf('IW\ServiceContainer\CannotAutowireCompositType', $e->getPrevious());
+            $this->assertSame('Cannot autowire composit type: IW\Fix\First|IW\Fix\Fourth, define a factory for it', $e->getPrevious()->getMessage());
+        }
     }
 
     /** @requires PHP >= 8.1 */
@@ -342,10 +346,13 @@ class ServiceContainerTest extends TestCase
     {
         $container = new ServiceContainer();
 
-        $this->expectException('IW\ServiceContainer\UnsupportedAutowireParam');
-        $this->expectExceptionMessage('Unsupported type hint for param: Parameter #0 [ <required> IW\Fix\Alias&IW\Fix\Zero $dependency ]');
-
-        $container->get('IW\Fix\ClassWithIntersectionType');
+        try {
+            $container->get('IW\Fix\ClassWithIntersectionType');
+        } catch (Throwable $e) {
+            $this->assertInstanceOf('IW\ServiceContainer\BrokenDependency', $e);
+            $this->assertInstanceOf('IW\ServiceContainer\CannotAutowireCompositType', $e->getPrevious());
+            $this->assertSame('Cannot autowire composit type: IW\Fix\Alias&IW\Fix\Zero, define a factory for it', $e->getPrevious()->getMessage());
+        }
     }
 
     public function testNullableParam(): void
@@ -380,5 +387,25 @@ class ServiceContainerTest extends TestCase
 
         $this->expectException('ParseError');
         $this->assertNull($container->try('IW\Fix\ClassWithSyntaxError'));
+    }
+
+    /** @requires PHP >= 8.2 */
+    public function testBindDnfType(): void
+    {
+        $container = new ServiceContainer();
+
+        $container->bind('(IW\Fix\Zero&IW\Fix\Alias)|IW\Fix\Fourth', static fn () => $container->get('IW\Fix\Zero'));
+
+        $this->assertInstanceOf('IW\Fix\ClassWithDnfType', $container->make('IW\Fix\ClassWithDnfType'));
+    }
+
+    /** @requires PHP >= 8.2 */
+    public function testAliasDnfType(): void
+    {
+        $container = new ServiceContainer();
+
+        $container->alias('(IW\Fix\Zero&IW\Fix\Alias)|IW\Fix\Fourth', 'IW\Fix\Fourth');
+
+        $this->assertInstanceOf('IW\Fix\ClassWithDnfType', $container->make('IW\Fix\ClassWithDnfType'));
     }
 }
