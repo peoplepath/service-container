@@ -25,11 +25,15 @@ trait ArgumentBuilder
     {
         $args = [];
 
-        foreach ($ids as [$id, $isOptional, $default, $dnf]) {
+        foreach ($ids as [$id, $isOptional, $default, $dnf, $isVariadic]) {
             if ($isOptional) {
                 $arg = $container->instance($id);
 
                 if ($arg === null) {
+                    if ($isVariadic) {
+                        break;
+                    }
+
                     $arg = $default;
                 }
             } else {
@@ -56,7 +60,7 @@ trait ArgumentBuilder
     /**
      * Returns IDs of dependencies
      *
-     * @return array<int, array{class-string, bool, mixed}>
+     * @return array<int, array{class-string, bool, mixed, bool, bool}>
      */
     final protected function resolveIds(): array
     {
@@ -72,8 +76,9 @@ trait ArgumentBuilder
                 $ids[] = [
                     $classname,
                     $param->isOptional(),
-                    $param->isOptional() ? $param->getDefaultValue() : null,
+                    $param->isOptional() && !$param->isVariadic() ? $param->getDefaultValue() : null,
                     false,
+                    $param->isVariadic(),
                 ];
                 continue;
             }
@@ -82,8 +87,9 @@ trait ArgumentBuilder
                 $ids[] = [
                     $type->__toString(),
                     $param->isOptional(),
-                    $param->isOptional() ? $param->getDefaultValue() : null,
+                    $param->isOptional() && !$param->isVariadic() ? $param->getDefaultValue() : null,
                     true,
+                    $param->isVariadic(),
                 ];
                 continue;
             }

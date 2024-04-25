@@ -283,6 +283,14 @@ class ServiceContainerTest extends TestCase
         $container->get('IW\Fix\ClassWithVariadicConstructor');
     }
 
+    public function testVariadicConstructor() : void {
+        $container = new ServiceContainer();
+        $this->assertEmpty($container->make('IW\Fix\ClassWithVariadicConstructor')->deps);
+
+        $container->set('IW\Fix\Alias', $zero = $container->get('IW\Fix\Zero'));
+        $this->assertSame([$zero], $container->make('IW\Fix\ClassWithVariadicConstructor')->deps);
+    }
+
     public function testOptionalParams(): void
     {
         $container = new ServiceContainer();
