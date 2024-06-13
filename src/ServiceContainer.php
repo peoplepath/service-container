@@ -76,7 +76,9 @@ class ServiceContainer implements ContainerInterface
      *
      * @param class-string<T> $id Identifier of the entry to look for.
      *
-     * @return T|ServiceContainer
+     * @return T
+     *
+     * @phpstan-return (T is static ? static : T)
      *
      * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
      * @throws ContainerExceptionInterface Error while retrieving the entry.
