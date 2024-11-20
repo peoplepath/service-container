@@ -416,4 +416,12 @@ class ServiceContainerTest extends TestCase
 
         $this->assertInstanceOf('IW\Fix\ClassWithDnfType', $container->make('IW\Fix\ClassWithDnfType'));
     }
+
+    /** @requires PHP >= 8.1 */
+    public function testNewInicializer(): void
+    {
+        $container = new ServiceContainer();
+
+        $this->assertInstanceOf(Fix\Zero::class, $container->make(Fix\ClassWithNewInicializer::class)->alias);
+    }
 }
