@@ -10,6 +10,7 @@ use IW\Fix\First;
 use IW\Fix\Fourth;
 use IW\ServiceContainer\BrokenConstructor;
 use IW\ServiceContainer\BrokenDependency;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Throwable;
@@ -316,7 +317,7 @@ class ServiceContainerTest extends TestCase
         $this->assertSame([], $instance->options);
     }
 
-    /** @requires PHP >= 8.0 */
+    #[RequiresPhp('>= 8.0')]
     public function testUnionTypesWiring(): void
     {
         $container = new ServiceContainer();
@@ -326,7 +327,7 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('IW\Fix\ClassWithUnionType', $container->get('IW\Fix\ClassWithUnionType'));
     }
 
-    /** @requires PHP >= 8.0 */
+    #[RequiresPhp('>= 8.0')]
     public function testUnionTypesCannotBeAutowired(): void
     {
         $container = new ServiceContainer();
@@ -340,7 +341,7 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    /** @requires PHP >= 8.1 */
+    #[RequiresPhp('>= 8.1')]
     public function testIntersectionTypesWiring(): void
     {
         $container = new ServiceContainer();
@@ -350,7 +351,7 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('IW\Fix\ClassWithIntersectionType', $container->get('IW\Fix\ClassWithIntersectionType'));
     }
 
-    /** @requires PHP >= 8.1 */
+    #[RequiresPhp('>= 8.1')]
     public function testIntersectionTypesCannotBeAutowired(): void
     {
         $container = new ServiceContainer();
@@ -398,7 +399,7 @@ class ServiceContainerTest extends TestCase
         $this->assertNull($container->try('IW\Fix\ClassWithSyntaxError'));
     }
 
-    /** @requires PHP >= 8.2 */
+    #[RequiresPhp('>= 8.2')]
     public function testBindDnfType(): void
     {
         $container = new ServiceContainer();
@@ -408,7 +409,7 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('IW\Fix\ClassWithDnfType', $container->make('IW\Fix\ClassWithDnfType'));
     }
 
-    /** @requires PHP >= 8.2 */
+    #[RequiresPhp('>= 8.2')]
     public function testAliasDnfType(): void
     {
         $container = new ServiceContainer();
@@ -418,7 +419,7 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('IW\Fix\ClassWithDnfType', $container->make('IW\Fix\ClassWithDnfType'));
     }
 
-    /** @requires PHP >= 8.1 */
+    #[RequiresPhp('>= 8.1')]
     public function testNewInicializer(): void
     {
         $container = new ServiceContainer();

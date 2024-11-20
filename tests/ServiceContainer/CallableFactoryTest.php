@@ -7,13 +7,14 @@ namespace IW\ServiceContainer;
 use IW\Fix\Fourth;
 use IW\Fix\Third;
 use IW\ServiceContainer;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 use function serialize;
 
 final class CallableFactoryTest extends TestCase
 {
-    /** @dataProvider callablesProvider */
+    #[DataProvider('callablesProvider')]
     public function testCreatingInstanceWithClosure(callable $callable): void
     {
         $factory = new CallableFactory($callable);
@@ -27,7 +28,7 @@ final class CallableFactoryTest extends TestCase
     }
 
     /** @return iterable<callable> */
-    public function callablesProvider(): iterable
+    public static function callablesProvider(): iterable
     {
         yield 'closure' => [static fn (Fourth $fourth) => new Third($fourth)];
         yield 'function' => [__NAMESPACE__ . '\factory_third'];
