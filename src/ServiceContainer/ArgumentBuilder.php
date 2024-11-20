@@ -76,7 +76,7 @@ trait ArgumentBuilder
                 $ids[] = [
                     $classname,
                     $param->isOptional(),
-                    $param->isOptional() && !$param->isVariadic() ? $param->getDefaultValue() : null,
+                    $param->isOptional() && ! $param->isVariadic() ? $param->getDefaultValue() : null,
                     false,
                     $param->isVariadic(),
                 ];
@@ -87,7 +87,7 @@ trait ArgumentBuilder
                 $ids[] = [
                     $type->__toString(),
                     $param->isOptional(),
-                    $param->isOptional() && !$param->isVariadic() ? $param->getDefaultValue() : null,
+                    $param->isOptional() && ! $param->isVariadic() ? $param->getDefaultValue() : null,
                     true,
                     $param->isVariadic(),
                 ];

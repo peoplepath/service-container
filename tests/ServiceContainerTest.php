@@ -283,7 +283,8 @@ class ServiceContainerTest extends TestCase
         $container->get('IW\Fix\ClassWithVariadicConstructor');
     }
 
-    public function testVariadicConstructor() : void {
+    public function testVariadicConstructor(): void
+    {
         $container = new ServiceContainer();
         $this->assertEmpty($container->make('IW\Fix\ClassWithVariadicConstructor')->deps);
 
