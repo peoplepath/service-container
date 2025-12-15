@@ -16,7 +16,7 @@ class CallableFactory implements ServiceFactory
     /** @var callable */
     private $factory;
 
-    /** @var array<int, array{class-string, bool, mixed}> */
+    /** @var list<array{class-string, bool, mixed}> */
     private array $ids;
 
     public function __construct(callable $factory)

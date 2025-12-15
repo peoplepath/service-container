@@ -13,6 +13,7 @@ final class WireFactory implements ServiceFactory
     /** @var class-string[] $dependencies */
     private array $dependencies;
 
+    /** @phpstan-param class-string $dependencies */
     public function __construct(private string $classname, string ...$dependencies)
     {
         $this->dependencies = $dependencies;

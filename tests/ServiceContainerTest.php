@@ -11,6 +11,7 @@ use IW\Fix\Fourth;
 use IW\ServiceContainer\BrokenConstructor;
 use IW\ServiceContainer\BrokenDependency;
 use PHPUnit\Framework\Attributes\RequiresPhp;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Throwable;
@@ -113,11 +114,9 @@ class ServiceContainerTest extends TestCase
         $this->assertSame($bar, $service->bar);
     }
 
-    /**
-     * @testWith ["IW\\NotExists", false]
-     *           ["IW\\Fix\\Fourth", true]
-     *           ["IW\\Fix\\Third", true]
-     */
+    #[TestWith(['IW\\NotExists', false])]
+    #[TestWith(['IW\\Fix\\Fourth', true])]
+    #[TestWith(['IW\\Fix\\Third', true])]
     public function testHasMethod(string $id, bool $has): void
     {
         $container = $this->createPartialMock(ServiceContainer::class, ['make']);
@@ -251,8 +250,26 @@ class ServiceContainerTest extends TestCase
         } catch (BrokenDependency $e) {
             $this->assertSame('Getting class IW\Fix\DependsOnClassWithFalseConstructor failed', $e->getMessage());
             $this->assertInstanceOf(BrokenConstructor::class, $e->getPrevious());
+            $this->assertSame('Constructor class IW\Fix\ClassWithFalseConstructor failed', $e->getPrevious()->getMessage());
             $this->assertInstanceOf('Exception', $e->getPrevious()->getPrevious());
             $this->assertSame('blah blah', $e->getPrevious()->getPrevious()->getMessage());
+        }
+    }
+
+    public function testDepencyOnDependsOnBrokenClass(): void
+    {
+        $container = new ServiceContainer();
+
+        try {
+            $container->get('IW\Fix\DependsOnDependsOnClassWithFalseConstructor');
+        } catch (BrokenDependency $e) {
+            $this->assertSame('Getting class IW\Fix\DependsOnDependsOnClassWithFalseConstructor failed', $e->getMessage());
+            $this->assertInstanceOf(BrokenDependency::class, $e->getPrevious());
+            $this->assertSame('Getting class IW\Fix\DependsOnClassWithFalseConstructor failed', $e->getPrevious()->getMessage());
+            $this->assertInstanceOf('IW\ServiceContainer\BrokenConstructor', $e->getPrevious()->getPrevious());
+            $this->assertSame('Constructor class IW\Fix\ClassWithFalseConstructor failed', $e->getPrevious()->getPrevious()->getMessage());
+            $this->assertInstanceOf('Exception', $e->getPrevious()->getPrevious());
+            // $this->assertSame('blah blah', $e->getPrevious()->getPrevious()->getMessage());
         }
     }
 

@@ -17,7 +17,7 @@ class ClassnameFactory implements ServiceFactory
 
     private ReflectionMethod|null $constructor = null;
 
-    /** @var array<int, array{class-string, bool, mixed}> */
+    /** @var list<array{class-string, bool, mixed}> */
     private array $ids;
 
     /** @param class-string $classname */
@@ -81,7 +81,6 @@ class ClassnameFactory implements ServiceFactory
 
         // if constructor isn't public we will save it for later use (construction over Reflection)
         if (! $constructor->isPublic()) {
-            $constructor->setAccessible(true);
             $this->constructor = $constructor;
         }
 

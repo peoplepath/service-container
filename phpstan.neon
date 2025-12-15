@@ -1,11 +1,4 @@
 parameters:
-  level: 9
+  level: 10
   paths:
     - src
-  ignoreErrors:
-    -
-      message: '#^Dead catch \- ReflectionException is never thrown in the try block\.$#'
-      path: src/ServiceContainer/ClassnameFactory.php
-    -
-      message: '#^Property IW\\ServiceContainer\\WireFactory\:\:\$dependencies \(array\<class\-string\>\) does not accept array\<int\|string, string\>\.$#'
-      path: src/ServiceContainer/WireFactory.php

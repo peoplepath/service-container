@@ -15,7 +15,7 @@ trait ArgumentBuilder
     /**
      * Returns arguments for a method/constructor
      *
-     * @param array<int, array{class-string<T>, bool, mixed}> $ids
+     * @param list<array{class-string<T>, bool, mixed}> $ids
      *
      * @return T[]
      *
@@ -55,12 +55,12 @@ trait ArgumentBuilder
      *
      * @return ReflectionParameter[]
      */
-    abstract protected function getParams(): array;
+    abstract private function getParams(): array;
 
     /**
      * Returns IDs of dependencies
      *
-     * @return array<int, array{class-string, bool, mixed, bool, bool}>
+     * @return list<array{class-string, bool, mixed, bool, bool}>
      */
     final protected function resolveIds(): array
     {
@@ -84,8 +84,11 @@ trait ArgumentBuilder
             }
 
             if (($type instanceof ReflectionUnionType) || ($type instanceof ReflectionIntersectionType)) {
+                /** @var class-string $id */
+                $id = $type->__toString();
+
                 $ids[] = [
-                    $type->__toString(),
+                    $id,
                     $param->isOptional(),
                     $param->isOptional() && ! $param->isVariadic() ? $param->getDefaultValue() : null,
                     true,
