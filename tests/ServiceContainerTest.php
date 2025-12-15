@@ -416,6 +416,7 @@ class ServiceContainerTest extends TestCase
         $this->assertNull($container->try('IW\Fix\ClassWithSyntaxError'));
     }
 
+    #[RequiresPhp('>= 8.4')]
     public function testLazy(): void
     {
         $container = new ServiceContainer();
