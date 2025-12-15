@@ -8,6 +8,7 @@ use IW\ServiceContainer\AliasFactory;
 use IW\ServiceContainer\CallableFactory;
 use IW\ServiceContainer\ClassnameFactory;
 use IW\ServiceContainer\EmptyResultFromFactory;
+use IW\ServiceContainer\LazyCallableFactory;
 use IW\ServiceContainer\WireFactory;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
@@ -59,6 +60,11 @@ class ServiceContainer implements ContainerInterface
     public function bind(string $id, callable $factory): void
     {
         $this->factories[$id] = new CallableFactory($factory);
+    }
+
+    public function lazy(string $id, callable $factory): void
+    {
+        $this->factories[$id] = new LazyCallableFactory($id, $factory);
     }
 
     /** @param class-string $id */

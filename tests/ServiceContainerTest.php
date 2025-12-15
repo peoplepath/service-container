@@ -416,6 +416,27 @@ class ServiceContainerTest extends TestCase
         $this->assertNull($container->try('IW\Fix\ClassWithSyntaxError'));
     }
 
+    public function testLazy(): void
+    {
+        $container = new ServiceContainer();
+
+        $initialized = false;
+
+        $container->lazy(Fix\ClassWithSomethingToSay::class, static function () use (&$initialized) {
+            $initialized = true;
+
+            return new Fix\ClassWithSomethingToSay('I toast therefore I am');
+        });
+
+        $toaster = $container->get(Fix\ClassWithSomethingToSay::class);
+
+        $this->assertInstanceOf(Fix\ClassWithSomethingToSay::class, $toaster);
+        $this->assertFalse($initialized);
+
+        $this->assertSame('I toast therefore I am', $toaster->say());
+        $this->assertTrue($initialized);
+    }
+
     #[RequiresPhp('>= 8.2')]
     public function testBindDnfType(): void
     {
