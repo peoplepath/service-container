@@ -16,13 +16,13 @@ class CallableFactory implements ServiceFactory
     /** @var callable */
     private $factory;
 
-    /** @var list<array{class-string, bool, mixed}> */
+    /** @var list<array{class-string, bool, mixed, bool, bool}> */
     private array $ids;
 
     public function __construct(callable $factory)
     {
         $this->factory = $factory;
-        $this->ids     = $this->resolveIds();
+        $this->ids = $this->resolveIds();
     }
 
     /**

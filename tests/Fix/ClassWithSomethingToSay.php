@@ -6,9 +6,7 @@ namespace IW\Fix;
 
 class ClassWithSomethingToSay
 {
-    public function __construct(private string $message)
-    {
-    }
+    public function __construct(private string $message) {}
 
     public function say(): string
     {

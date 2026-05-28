@@ -6,6 +6,8 @@ declare(strict_types=1);
 
 namespace IW;
 
+use const PHP_VERSION;
+
 use IW\Fix\First;
 use IW\Fix\Fourth;
 use IW\ServiceContainer\BrokenConstructor;
@@ -20,13 +22,11 @@ use function random_bytes;
 use function uniqid;
 use function version_compare;
 
-use const PHP_VERSION;
-
 class ServiceContainerTest extends TestCase
 {
-    public function testGettingNonExistingClass(): void
+    public function test_getting_non_existing_class(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->expectException('IW\ServiceContainer\ServiceNotFound');
         $this->expectExceptionCode(1);
@@ -34,9 +34,9 @@ class ServiceContainerTest extends TestCase
         $container->get('IW\NotExists');
     }
 
-    public function testThatExceptionNotRelatedWithServiceMakingAreDisclosed(): void
+    public function test_that_exception_not_related_with_service_making_are_disclosed(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->expectException('Exception');
         $this->expectExceptionMessage('blah blah');
@@ -50,11 +50,11 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    public function testSettingAndUnsettingAService(): void
+    public function test_setting_and_unsetting_a_service(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
-        $service = new stdClass();
+        $service = new stdClass;
         $container->set($id = random_bytes(10), $service);
 
         $this->assertSame($service, $container->get($id));
@@ -62,42 +62,42 @@ class ServiceContainerTest extends TestCase
         $this->assertSame($service, $container->unset($id));
 
         $this->expectException('IW\ServiceContainer\ServiceNotFound');
-        $this->expectExceptionMessage('Service object not found, id: ' . $id);
+        $this->expectExceptionMessage('Service object not found, id: '.$id);
         $container->get($id);
     }
 
-    public function testUnsettingUnknownService(): void
+    public function test_unsetting_unknown_service(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->assertNull($container->unset('ImNotSingleton'));
     }
 
-    public function testImplicitSingleton(): void
+    public function test_implicit_singleton(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         // you always get singleton of same class (id)
         $service = $container->get('IW\Fix\First');
         $this->assertSame($service, $container->get('IW\Fix\First'));
     }
 
-    public function testServiceAliasing(): void
+    public function test_service_aliasing(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->alias('IW\Fix\Alias', 'IW\Fix\Zero');
         $this->assertSame($container->get('IW\Fix\Alias'), $container->get('IW\Fix\Zero'));
     }
 
-    public function testBindingCustomFactory(): void
+    public function test_binding_custom_factory(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $bar = $container->get('IW\Fix\Second');
 
         $container->bind($id = uniqid(), static function (ServiceContainer $container) use ($bar) {
-            $service      = new stdClass();
+            $service = new stdClass;
             $service->foo = $container->get('IW\Fix\First');
             $service->bar = $bar;
 
@@ -117,7 +117,7 @@ class ServiceContainerTest extends TestCase
     #[TestWith(['IW\\NotExists', false])]
     #[TestWith(['IW\\Fix\\Fourth', true])]
     #[TestWith(['IW\\Fix\\Third', true])]
-    public function testHasMethod(string $id, bool $has): void
+    public function test_has_method(string $id, bool $has): void
     {
         $container = $this->createPartialMock(ServiceContainer::class, ['make']);
         $container->expects($this->never())->method('make');
@@ -129,38 +129,38 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    public function testHasASingleton(): void
+    public function test_has_a_singleton(): void
     {
         $container = $this->createPartialMock(ServiceContainer::class, ['make', 'factory']);
         $container->expects($this->never())->method('make');
         $container->expects($this->never())->method('factory');
 
-        $container->set('aclass', new stdClass());
+        $container->set('aclass', new stdClass);
         $this->assertTrue($container->has('aclass'));
     }
 
-    public function testHasAFactory(): void
+    public function test_has_a_factory(): void
     {
         $container = $this->createPartialMock(ServiceContainer::class, ['make', 'factory']);
         $container->expects($this->never())->method('make');
         $container->expects($this->never())->method('factory');
 
         $container->bind('aclass', static function () {
-            return new stdClass();
+            return new stdClass;
         });
         $this->assertTrue($container->has('aclass'));
     }
 
-    public function testGetForBuildInClass(): void
+    public function test_get_for_build_in_class(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->assertInstanceOf('stdClass', $container->get('stdClass'));
     }
 
-    public function testGetForAClass(): void
+    public function test_get_for_a_class(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->assertInstanceOf('IW\Fix\First', $container->get('IW\Fix\First'));
     }
@@ -168,17 +168,17 @@ class ServiceContainerTest extends TestCase
     /**
      * Due to a bug in PHP reflection which conceal the error
      */
-    public function testMakeForClassWithSyntaxError(): void
+    public function test_make_for_class_with_syntax_error(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->expectException('ParseError');
         $container->make('IW\Fix\ClassWithSyntaxError');
     }
 
-    public function testThatInterfaceCannotBeAutowired(): void
+    public function test_that_interface_cannot_be_autowired(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->expectException('IW\ServiceContainer\CannotAutowireInterface');
         $this->expectExceptionMessage('Cannot autowire interface: IW\Fix\Alias');
@@ -192,25 +192,25 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    public function testThatScalarCannotBeAutowired(): void
+    public function test_that_scalar_cannot_be_autowired(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->expectExceptionMessageMatches('/Unsupported type hint for param: Parameter #0 \[ <required> int(eger)? \$userId \]/');
         $container->get('IW\Fix\ClassWithUnsupportedParam');
     }
 
-    public function testThatNoHintCannotBeAutowired(): void
+    public function test_that_no_hint_cannot_be_autowired(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->expectExceptionMessage('No type hint for param: Parameter #0 [ <required> $userId ]');
         $container->get('IW\Fix\ClassWithNoType');
     }
 
-    public function testProperFailWhenFactoryIsDefinedBadly(): void
+    public function test_proper_fail_when_factory_is_defined_badly(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->bind('Poo', static function (): void {
             // this factory returns nothing
@@ -221,9 +221,9 @@ class ServiceContainerTest extends TestCase
         $container->make('Poo');
     }
 
-    public function testResolvingArbitraryFactoryParams(): void
+    public function test_resolving_arbitrary_factory_params(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->bind('get_me_a_foo', static function (First $first) {
             return $first;
@@ -232,18 +232,18 @@ class ServiceContainerTest extends TestCase
         $this->assertInstanceOf('IW\Fix\First', $container->get('get_me_a_foo'));
     }
 
-    public function testObtainingInstance(): void
+    public function test_obtaining_instance(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->assertNull($container->instance('IW\Fix\First'));
         $container->get('IW\Fix\First');
         $this->assertInstanceOf('IW\Fix\First', $container->instance('IW\Fix\First'));
     }
 
-    public function testDepencyOnBrokenClass(): void
+    public function test_depency_on_broken_class(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         try {
             $container->get('IW\Fix\DependsOnClassWithFalseConstructor');
@@ -256,9 +256,9 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    public function testDepencyOnDependsOnBrokenClass(): void
+    public function test_depency_on_depends_on_broken_class(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         try {
             $container->get('IW\Fix\DependsOnDependsOnClassWithFalseConstructor');
@@ -273,9 +273,9 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    public function testManualWiring(): void
+    public function test_manual_wiring(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->wire('IW\Fix\ClassWithVariadicConstructor', 'IW\Fix\Zero');
 
@@ -285,9 +285,9 @@ class ServiceContainerTest extends TestCase
         );
     }
 
-    public function testManualWiringFail(): void
+    public function test_manual_wiring_fail(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->wire('IW\Fix\ClassWithVariadicConstructor', 'IW\Fix\Zero', 'IW\Fix\First', 'IW\Fix\Second');
 
@@ -301,18 +301,18 @@ class ServiceContainerTest extends TestCase
         $container->get('IW\Fix\ClassWithVariadicConstructor');
     }
 
-    public function testVariadicConstructor(): void
+    public function test_variadic_constructor(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
         $this->assertEmpty($container->make('IW\Fix\ClassWithVariadicConstructor')->deps);
 
         $container->set('IW\Fix\Alias', $zero = $container->get('IW\Fix\Zero'));
         $this->assertSame([$zero], $container->make('IW\Fix\ClassWithVariadicConstructor')->deps);
     }
 
-    public function testOptionalParams(): void
+    public function test_optional_params(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $instance = $container->make('IW\Fix\ClassWithOptionalParams');
         $this->assertNull($instance->fourth);
@@ -334,20 +334,20 @@ class ServiceContainerTest extends TestCase
         $this->assertSame([], $instance->options);
     }
 
-    #[RequiresPhp('>= 8.0')]
-    public function testUnionTypesWiring(): void
+    #[RequiresPhp('>= 8.0.0')]
+    public function test_union_types_wiring(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->wire('IW\Fix\ClassWithUnionType', 'IW\Fix\First');
 
         $this->assertInstanceOf('IW\Fix\ClassWithUnionType', $container->get('IW\Fix\ClassWithUnionType'));
     }
 
-    #[RequiresPhp('>= 8.0')]
-    public function testUnionTypesCannotBeAutowired(): void
+    #[RequiresPhp('>= 8.0.0')]
+    public function test_union_types_cannot_be_autowired(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         try {
             $container->get('IW\Fix\ClassWithUnionType');
@@ -358,20 +358,20 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    #[RequiresPhp('>= 8.1')]
-    public function testIntersectionTypesWiring(): void
+    #[RequiresPhp('>= 8.1.0')]
+    public function test_intersection_types_wiring(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->wire('IW\Fix\ClassWithIntersectionType', 'IW\Fix\Zero');
 
         $this->assertInstanceOf('IW\Fix\ClassWithIntersectionType', $container->get('IW\Fix\ClassWithIntersectionType'));
     }
 
-    #[RequiresPhp('>= 8.1')]
-    public function testIntersectionTypesCannotBeAutowired(): void
+    #[RequiresPhp('>= 8.1.0')]
+    public function test_intersection_types_cannot_be_autowired(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         try {
             $container->get('IW\Fix\ClassWithIntersectionType');
@@ -382,9 +382,9 @@ class ServiceContainerTest extends TestCase
         }
     }
 
-    public function testNullableParam(): void
+    public function test_nullable_param(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
         $container->set('IW\Fix\First', null);
         $this->assertTrue($container->has('IW\Fix\First'));
 
@@ -392,20 +392,20 @@ class ServiceContainerTest extends TestCase
         $this->assertNull($instance->first);
     }
 
-    public function testFactory(): void
+    public function test_factory(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->assertInstanceOf('IW\ServiceContainer\ClassnameFactory', $container->factory(Fourth::class));
 
-        $container->bind(Fourth::class, static fn () => new Fourth());
+        $container->bind(Fourth::class, static fn () => new Fourth);
 
         $this->assertInstanceOf('IW\ServiceContainer\CallableFactory', $container->factory(Fourth::class));
     }
 
-    public function testTry(): void
+    public function test_try(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->assertInstanceOf('IW\Fix\First', $container->try('IW\Fix\First'));
         $this->assertNull($container->try('IW\Fix\ClassWithFalseConstructor', $exception));
@@ -416,10 +416,10 @@ class ServiceContainerTest extends TestCase
         $this->assertNull($container->try('IW\Fix\ClassWithSyntaxError'));
     }
 
-    #[RequiresPhp('>= 8.4')]
-    public function testLazy(): void
+    #[RequiresPhp('>= 8.4.0')]
+    public function test_lazy(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $initialized = false;
 
@@ -438,30 +438,30 @@ class ServiceContainerTest extends TestCase
         $this->assertTrue($initialized);
     }
 
-    #[RequiresPhp('>= 8.2')]
-    public function testBindDnfType(): void
+    #[RequiresPhp('>= 8.2.0')]
+    public function test_bind_dnf_type(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->bind('(IW\Fix\Zero&IW\Fix\Alias)|IW\Fix\Fourth', static fn () => $container->get('IW\Fix\Zero'));
 
         $this->assertInstanceOf('IW\Fix\ClassWithDnfType', $container->make('IW\Fix\ClassWithDnfType'));
     }
 
-    #[RequiresPhp('>= 8.2')]
-    public function testAliasDnfType(): void
+    #[RequiresPhp('>= 8.2.0')]
+    public function test_alias_dnf_type(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $container->alias('(IW\Fix\Zero&IW\Fix\Alias)|IW\Fix\Fourth', 'IW\Fix\Fourth');
 
         $this->assertInstanceOf('IW\Fix\ClassWithDnfType', $container->make('IW\Fix\ClassWithDnfType'));
     }
 
-    #[RequiresPhp('>= 8.1')]
-    public function testNewInicializer(): void
+    #[RequiresPhp('>= 8.1.0')]
+    public function test_new_inicializer(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
 
         $this->assertInstanceOf(Fix\Zero::class, $container->make(Fix\ClassWithNewInicializer::class)->alias);
     }

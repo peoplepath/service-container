@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace IW\ServiceContainer;
 
-class SerializationFail extends Exception
-{
-}
+class SerializationFail extends Exception {}

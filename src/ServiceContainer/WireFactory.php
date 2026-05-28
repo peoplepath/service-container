@@ -10,7 +10,7 @@ use function array_map;
 
 final class WireFactory implements ServiceFactory
 {
-    /** @var class-string[] $dependencies */
+    /** @var class-string[] */
     private array $dependencies;
 
     /** @phpstan-param class-string $dependencies */
@@ -24,7 +24,7 @@ final class WireFactory implements ServiceFactory
      */
     public function __invoke(ServiceContainer $container): object
     {
-        $classname    = $this->classname;
+        $classname = $this->classname;
         $dependencies = array_map(
             static function ($dependency) use ($container) {
                 return $container->get($dependency);

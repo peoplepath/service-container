@@ -15,16 +15,16 @@ class ClassnameFactory implements ServiceFactory
 {
     use ArgumentBuilder;
 
-    private ReflectionMethod|null $constructor = null;
+    private ?ReflectionMethod $constructor = null;
 
-    /** @var list<array{class-string, bool, mixed}> */
+    /** @var list<array{class-string, bool, mixed, bool, bool}> */
     private array $ids;
 
     /** @param class-string $classname */
     public function __construct(private string $classname)
     {
         $this->classname = $classname;
-        $this->ids       = $this->resolveIds();
+        $this->ids = $this->resolveIds();
     }
 
     /**
@@ -42,7 +42,7 @@ class ClassnameFactory implements ServiceFactory
 
         try {
             if ($this->constructor) {
-                $class    = new ReflectionClass($classname);
+                $class = new ReflectionClass($classname);
                 $instance = $class->newInstanceWithoutConstructor();
                 $this->constructor->invokeArgs($instance, $args);
             } else {
@@ -64,7 +64,7 @@ class ClassnameFactory implements ServiceFactory
     {
         try {
             $class = new ReflectionClass($this->classname);
-        } catch (ReflectionException $e) {
+        } catch (ReflectionException $e) { // @phpstan-ignore catch.neverThrown (class may not exists)
             throw new ServiceNotFound($this->classname, $e);
         }
 

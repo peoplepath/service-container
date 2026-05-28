@@ -6,7 +6,5 @@ namespace IW\Fix;
 
 final class Third
 {
-    public function __construct(Fourth $fourth)
-    {
-    }
+    public function __construct(Fourth $fourth) {}
 }

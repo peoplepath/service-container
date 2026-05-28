@@ -10,6 +10,6 @@ class BrokenConstructor extends Exception
 {
     public function __construct(string $classname, Throwable $previous)
     {
-        parent::__construct('Constructor class ' . $classname . ' failed', $previous);
+        parent::__construct('Constructor class '.$classname.' failed', $previous);
     }
 }

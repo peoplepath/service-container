@@ -6,7 +6,5 @@ namespace IW\Fix;
 
 class ClassWithDnfType
 {
-    public function __construct(private (Zero&Alias)|Fourth $dependency)
-    {
-    }
+    public function __construct(private (Zero&Alias)|Fourth $dependency) {}
 }

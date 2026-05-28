@@ -18,13 +18,13 @@ class ServiceContainerBench
 
     public function __construct()
     {
-        $this->container = new ServiceContainer();
+        $this->container = new ServiceContainer;
     }
 
     public function init(): void
     {
         for ($i = 0; $i < 1000; $i++) {
-            $classname = 'benchclass' . $i;
+            $classname = 'benchclass'.$i;
 
             eval(sprintf('class %s {}', $classname));
 
@@ -34,16 +34,18 @@ class ServiceContainerBench
 
     /**
      * @Revs(1000)
+     *
      * @Iterations(5)
      */
     public function benchGet(): void
     {
-        $container = new ServiceContainer();
+        $container = new ServiceContainer;
         $container->get((string) array_pop($this->classnames));
     }
 
     /**
      * @Revs(1000)
+     *
      * @Iterations(5)
      */
     public function benchGetSingletons(): void

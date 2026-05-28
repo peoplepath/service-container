@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace IW\Fix;
 
-interface Alias
-{
-}
+interface Alias {}

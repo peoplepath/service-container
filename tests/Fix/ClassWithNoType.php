@@ -1,4 +1,6 @@
-<?php // phpcs:disable
+<?php
+
+// phpcs:disable
 
 declare(strict_types=1);
 
@@ -9,7 +11,7 @@ class ClassWithNoType
     /** @var int */
     public $userId;
 
-    function __construct($userId)
+    public function __construct($userId)
     {
         $this->userId = $userId;
     }

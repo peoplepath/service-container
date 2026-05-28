@@ -12,13 +12,14 @@ use function unserialize;
 
 final class ClassnameFactoryTest extends TestCase
 {
-    public function testCreatingInstance(): void
+    public function test_creating_instance(): void
     {
         $container = $this->createMock(ServiceContainer::class);
-        $factory   = new ClassnameFactory('IW\Fix\Fourth');
+        $factory = new ClassnameFactory('IW\Fix\Fourth');
         $this->assertInstanceOf('IW\Fix\Fourth', $fourth = $factory($container));
 
-        $container->method('get')
+        $container->expects($this->exactly(2))
+            ->method('get')
             ->with('IW\Fix\Fourth')
             ->willReturn($fourth);
 

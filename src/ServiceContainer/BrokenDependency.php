@@ -10,6 +10,6 @@ class BrokenDependency extends Exception
 {
     public function __construct(string $classname, Throwable $previous)
     {
-        parent::__construct('Getting class ' . $classname . ' failed', $previous);
+        parent::__construct('Getting class '.$classname.' failed', $previous);
     }
 }

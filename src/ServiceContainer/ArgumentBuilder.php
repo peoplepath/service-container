@@ -15,8 +15,7 @@ trait ArgumentBuilder
     /**
      * Returns arguments for a method/constructor
      *
-     * @param list<array{class-string<T>, bool, mixed}> $ids
-     *
+     * @param  list<array{class-string<T>, bool, mixed, bool, bool}>  $ids
      * @return T[]
      *
      * @template T
@@ -80,6 +79,7 @@ trait ArgumentBuilder
                     false,
                     $param->isVariadic(),
                 ];
+
                 continue;
             }
 
@@ -94,6 +94,7 @@ trait ArgumentBuilder
                     true,
                     $param->isVariadic(),
                 ];
+
                 continue;
             }
 

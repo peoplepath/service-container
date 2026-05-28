@@ -6,7 +6,5 @@ namespace IW\Fix;
 
 class ClassWithIntersectionType
 {
-    public function __construct(private Alias&Zero $dependency)
-    {
-    }
+    public function __construct(private Alias&Zero $dependency) {}
 }

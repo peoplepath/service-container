@@ -10,8 +10,8 @@ use Throwable;
 
 class ServiceNotFound extends Exception implements NotFoundExceptionInterface
 {
-    public function __construct(string $id, Throwable|null $previous = null)
+    public function __construct(string $id, ?Throwable $previous = null)
     {
-        parent::__construct('Service object not found, id: ' . $id, 1, $previous);
+        parent::__construct('Service object not found, id: '.$id, 1, $previous);
     }
 }

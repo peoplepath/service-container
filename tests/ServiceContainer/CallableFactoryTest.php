@@ -15,11 +15,11 @@ use function serialize;
 final class CallableFactoryTest extends TestCase
 {
     #[DataProvider('callablesProvider')]
-    public function testCreatingInstanceWithClosure(callable $callable): void
+    public function test_creating_instance_with_closure(callable $callable): void
     {
         $factory = new CallableFactory($callable);
 
-        $this->assertInstanceOf('IW\Fix\Third', $factory(new ServiceContainer()));
+        $this->assertInstanceOf('IW\Fix\Third', $factory(new ServiceContainer));
 
         $this->expectException('IW\ServiceContainer\SerializationFail');
         $this->expectExceptionCode(1);
@@ -31,11 +31,11 @@ final class CallableFactoryTest extends TestCase
     public static function callablesProvider(): iterable
     {
         yield 'closure' => [static fn (Fourth $fourth) => new Third($fourth)];
-        yield 'function' => [__NAMESPACE__ . '\factory_third'];
-        yield 'method' => [[new FactoryThird(), 'makeThird']];
-        yield 'static method' => [__NAMESPACE__ . '\FactoryThird::createThird'];
-        yield 'static method 2' => [[__NAMESPACE__ . '\FactoryThird', 'createThird']];
-        yield 'callable class' => [new FactoryThird()];
+        yield 'function' => [__NAMESPACE__.'\factory_third'];
+        yield 'method' => [[new FactoryThird, 'makeThird']];
+        yield 'static method' => [__NAMESPACE__.'\FactoryThird::createThird'];
+        yield 'static method 2' => [[__NAMESPACE__.'\FactoryThird', 'createThird']];
+        yield 'callable class' => [new FactoryThird];
     }
 }
 

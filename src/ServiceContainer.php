@@ -39,8 +39,8 @@ class ServiceContainer implements ContainerInterface
      * $service = $container->get(Service::class);
      * </code>
      *
-     * @param class-string $alias an ID for aliased dependency
-     * @param class-string $id    an ID of instance which will be alias resolve with
+     * @param  class-string  $alias  an ID for aliased dependency
+     * @param  class-string  $id  an ID of instance which will be alias resolve with
      */
     public function alias(string $alias, string $id): void
     {
@@ -51,17 +51,18 @@ class ServiceContainer implements ContainerInterface
      * Bind a factory to an instance, it's useful for resolving complex dependencies
      * where manually (eg. database connection)
      *
-     * @param string   $id      ID of entry we want to define factory for
-     * @param callable $factory a callable which returns new instance if called
-     *                          callable will receive two arguments:
-     *                          $container - this container
-     *                          $id - ID that was called to create
+     * @param  string  $id  ID of entry we want to define factory for
+     * @param  callable  $factory  a callable which returns new instance if called
+     *                             callable will receive two arguments:
+     *                             $container - this container
+     *                             $id - ID that was called to create
      */
     public function bind(string $id, callable $factory): void
     {
         $this->factories[$id] = new CallableFactory($factory);
     }
 
+    /** @param class-string $id */
     public function lazy(string $id, callable $factory): void
     {
         $this->factories[$id] = new LazyCallableFactory($id, $factory);
@@ -80,11 +81,10 @@ class ServiceContainer implements ContainerInterface
     /**
      * Finds an entry of the container by its identifier and returns it.
      *
-     * @param class-string<T> $id Identifier of the entry to look for.
-     *
+     * @param  class-string<T>  $id  Identifier of the entry to look for.
      * @return T|ServiceContainer
      *
-     * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
+     * @throws NotFoundExceptionInterface No entry was found for **this** identifier.
      * @throws ContainerExceptionInterface Error while retrieving the entry.
      *
      * @template T
@@ -109,7 +109,7 @@ class ServiceContainer implements ContainerInterface
      * `has($id)` returning true does not mean that `get($id)` will not throw an exception.
      * It does however mean that `get($id)` will not throw a `NotFoundExceptionInterface`.
      *
-     * @param class-string $id Identifier of the entry to look for.
+     * @param  class-string  $id  Identifier of the entry to look for.
      */
     public function has(string $id): bool
     {
@@ -144,8 +144,7 @@ class ServiceContainer implements ContainerInterface
     /**
      * Makes a new instance of a service. Dependencies are resolved from the container.
      *
-     * @param class-string<T> $id ID of entry we want to create new instance of
-     *
+     * @param  class-string<T>  $id  ID of entry we want to create new instance of
      * @return T
      *
      * @template T
@@ -164,8 +163,8 @@ class ServiceContainer implements ContainerInterface
     /**
      * Sets given entry as a singleton
      *
-     * @param string $id    ID of entry
-     * @param mixed  $entry actual entry
+     * @param  string  $id  ID of entry
+     * @param  mixed  $entry  actual entry
      */
     public function set(string $id, mixed $entry): void
     {
@@ -175,14 +174,13 @@ class ServiceContainer implements ContainerInterface
     /**
      * Try to get existing instance or create new, return NULL if instance cannot be created
      *
-     * @param class-string<T>                  $id        Identifier of the entry to look for.
-     * @param ContainerExceptionInterface|null $exception sets exception if thrown
-     *
+     * @param  class-string<T>  $id  Identifier of the entry to look for.
+     * @param  ContainerExceptionInterface|null  $exception  sets exception if thrown
      * @return T|ServiceContainer|null
      *
      * @template T
      */
-    public function try(string $id, ContainerExceptionInterface|null &$exception = null): mixed
+    public function try(string $id, ?ContainerExceptionInterface &$exception = null): mixed
     {
         try {
             return $this->get($id);
@@ -196,7 +194,7 @@ class ServiceContainer implements ContainerInterface
     /**
      * Unset a singleton with given ID, returns the singleton if existed or a NULL if didn't
      *
-     * @param string $id ID of singleton to unset
+     * @param  string  $id  ID of singleton to unset
      */
     public function unset(string $id): mixed
     {
@@ -211,6 +209,9 @@ class ServiceContainer implements ContainerInterface
         return null;
     }
 
+    /**
+     * @param  class-string  $dependencies
+     */
     public function wire(string $id, string ...$dependencies): void
     {
         $this->factories[$id] = new WireFactory($id, ...$dependencies);

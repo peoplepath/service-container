@@ -9,6 +9,7 @@ use ReflectionClass;
 
 class LazyCallableFactory extends CallableFactory
 {
+    /** @param class-string $id */
     public function __construct(private string $id, callable $factory)
     {
         parent::__construct($factory);
@@ -17,6 +18,6 @@ class LazyCallableFactory extends CallableFactory
     public function __invoke(ServiceContainer $container): mixed
     {
         return new ReflectionClass($this->id)
-            ->newLazyProxy(fn () => parent::__invoke($container));
+            ->newLazyProxy(fn (): object => (object) parent::__invoke($container));
     }
 }

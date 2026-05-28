@@ -1,0 +1,5 @@
+{
+    "notPath": [
+        "tests/Fix/ClassWithSyntaxError.php"
+    ]
+}

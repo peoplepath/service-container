@@ -9,9 +9,7 @@ use IW\ServiceContainer;
 class AliasFactory implements ServiceFactory
 {
     /** @param class-string $classname */
-    public function __construct(private string $classname)
-    {
-    }
+    public function __construct(private string $classname) {}
 
     /**
      * Creates instance of simple class with no parameters

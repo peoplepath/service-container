@@ -6,7 +6,5 @@ namespace IW\Fix;
 
 class WithAlias
 {
-    public function __construct(Alias $alias)
-    {
-    }
+    public function __construct(Alias $alias) {}
 }

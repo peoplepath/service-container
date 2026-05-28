@@ -6,7 +6,5 @@ namespace IW\Fix;
 
 class ClassWithNewInicializer
 {
-    public function __construct(public readonly Alias $alias = new Zero())
-    {
-    }
+    public function __construct(public readonly Alias $alias = new Zero) {}
 }
